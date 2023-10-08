@@ -137,45 +137,48 @@ class _VideoPlayerState extends State<VideoPlayer> {
                   fontWeight: FontWeight.w600,
                   fontSize: 24,
                 )),
-            ReorderableListView.builder(
-              padding: const EdgeInsets.all(10),
-              shrinkWrap: true,
-              itemCount: timeStamps.length,
-              itemBuilder: (context, index) {
-                return Dismissible(
-                  key: ValueKey<int>(timeStamps[index].hashCode),
-                  direction: DismissDirection.startToEnd,
-                  background: Container(
-                    color: Colors.redAccent,
-                  ),
-                  onDismissed: (direction) {
-                    setState(() {
-                      timeStamps.removeAt(index);
-                    });
-                  },
-                  child: InkWell(
-                    onTap: () => _player.seek(timeStamps[index]),
-                    splashColor: Colors.redAccent,
-                    child: ListTile(
-                      leading: const Icon(Icons.timer),
-                      title: Text(
-                        'Index $index',
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: Text(timeStamps[index].label()),
+            Expanded(
+              child: ReorderableListView.builder(
+                padding: const EdgeInsets.all(10),
+                shrinkWrap: true,
+                scrollController: ScrollController(),
+                itemCount: timeStamps.length,
+                itemBuilder: (context, index) {
+                  return Dismissible(
+                    key: ValueKey<int>(timeStamps[index].hashCode),
+                    direction: DismissDirection.startToEnd,
+                    background: Container(
+                      color: Colors.redAccent,
                     ),
-                  ),
-                );
-              },
-              onReorder: (int oldIndex, int newIndex) {
-                setState(() {
-                  if (oldIndex < newIndex) {
-                    newIndex -= 1;
-                  }
-                  final Duration item = timeStamps.removeAt(oldIndex);
-                  timeStamps.insert(newIndex, item);
-                });
-              },
+                    onDismissed: (direction) {
+                      setState(() {
+                        timeStamps.removeAt(index);
+                      });
+                    },
+                    child: InkWell(
+                      onTap: () => _player.seek(timeStamps[index]),
+                      splashColor: Colors.redAccent,
+                      child: ListTile(
+                        leading: const Icon(Icons.timer),
+                        title: Text(
+                          'Index $index',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        subtitle: Text(timeStamps[index].label()),
+                      ),
+                    ),
+                  );
+                },
+                onReorder: (int oldIndex, int newIndex) {
+                  setState(() {
+                    if (oldIndex < newIndex) {
+                      newIndex -= 1;
+                    }
+                    final Duration item = timeStamps.removeAt(oldIndex);
+                    timeStamps.insert(newIndex, item);
+                  });
+                },
+              ),
             ),
           ]),
           child: _buildVideo(context)),

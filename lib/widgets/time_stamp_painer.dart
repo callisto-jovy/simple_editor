@@ -25,6 +25,6 @@ class TimeStampPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CustomPainter old) {
-    return true;
+    return false;
   }
 }
