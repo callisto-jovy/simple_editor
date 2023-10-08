@@ -1,0 +1,10 @@
+
+.DS_Store
+
+.gradle
+.idea
+build/*
+/core/build/*
+/examples/build/*
+/jvm/build/*
+y

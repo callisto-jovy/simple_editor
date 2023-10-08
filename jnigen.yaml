@@ -1,0 +1,16 @@
+output:
+  c:
+    library_name: tarsosDSP
+    path: src/be/tarsos/dsp/
+  dart:
+    path: lib/audio/tarsosdsp.dart
+    structure: single_file
+
+
+source_path:
+  - 'TarsosDSP/core/src/main/java'
+
+classes:
+  - 'de.yugata.audio.AudioAnalyser'
+
+
