@@ -7,6 +7,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
 import 'package:video_editor/utils/config_util.dart' as config;
+import 'package:video_editor/widgets/custom_video_controls.dart' as custom_controls;
 
 class VideoPlayer extends StatefulWidget {
   const VideoPlayer({super.key});
@@ -44,8 +45,11 @@ class _VideoPlayerState extends State<VideoPlayer> {
   Widget _buildVideo(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
 
-    return MaterialDesktopVideoControlsTheme(
-      normal: MaterialDesktopVideoControlsThemeData(
+    return custom_controls.CustomMaterialDesktopVideoControlsTheme(
+      normal: custom_controls.CustomMaterialDesktopVideoControlsThemeData(
+        seekBar: custom_controls.CustomMaterialDesktopSeekBar(
+          timeStamps: timeStamps,
+        ),
         keyboardShortcuts: {
           const SingleActivator(LogicalKeyboardKey.mediaPlay): () => _player.play(),
           const SingleActivator(LogicalKeyboardKey.mediaPause): () => _player.pause(),
@@ -97,7 +101,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
           ),
         ],
       ),
-      fullscreen: const MaterialDesktopVideoControlsThemeData(
+      fullscreen: const custom_controls.CustomMaterialDesktopVideoControlsThemeData(
         // Modify theme options:
         displaySeekBar: false,
         automaticallyImplySkipNextButton: false,
@@ -109,9 +113,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
         child: Video(
           controller: _controller,
           wakelock: true,
-          controls: (state) {
-            return MaterialDesktopVideoControls(state);
-          },
+          controls: (state) => custom_controls.CustomMaterialDesktopVideoControls(state),
         ),
       ),
     );
