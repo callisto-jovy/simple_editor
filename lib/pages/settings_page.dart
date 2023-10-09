@@ -13,7 +13,10 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Editing Options')),
+      appBar: AppBar(
+        title: const Text('Editing Options'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
       body: SettingsList(
         sections: [
           SettingsSection(
@@ -28,7 +31,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         });
                       },
                       initialValue: value,
-                      leading: const Icon(Icons.settings),
+                      leading: const Icon(Icons.flag),
                       title: Text(key),
                     )))
                 .values
