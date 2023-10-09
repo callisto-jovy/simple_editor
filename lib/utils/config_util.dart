@@ -17,13 +17,21 @@ final List<Duration> timeStamps = [];
 
 const JsonEncoder encoder = JsonEncoder.withIndent('  ');
 
+final Map<String, bool> editingOptions = {
+  'WRITE_HDR_OPTIONS': true,
+  'BEST_QUALITY': true,
+  'SHUFFLE_SEQUENCES': false,
+  'INTERPOLATE_FRAMES': false,
+  'FADE_TRANSITION': false,
+  'ZOOM_IN': false,
+  'FADE_OUT_VIDEO': true,
+};
 
 void exportFile({File? file}) {
   file ??= File('saved_state.json');
 
-  final JList<JDouble> beatTimes = AudioAnalyser.analyseBeats(
-      JString.fromString(audioPath), peakThreshold, msThreshold);
-
+  final JList<JDouble> beatTimes =
+      AudioAnalyser.analyseBeats(JString.fromString(audioPath), peakThreshold, msThreshold);
 
   final json = {
     'source_video': videoPath,
@@ -35,7 +43,30 @@ void exportFile({File? file}) {
       'intro_end': introEnd == null ? -1 : introEnd!.inMicroseconds,
       'time_stamps': timeStamps.map((e) => e.inMicroseconds).toList(),
       'beat_times': beatTimes.map((e) => e.doubleValue(releaseOriginal: true)).toList(),
+      'editing_flags': editingOptions
     }
   };
   file.writeAsString(encoder.convert(json));
+}
+
+void importFile({String? path}) {
+  if (path == null || path.isEmpty) return;
+
+  final File file = File(path);
+  dynamic json = jsonDecode(file.readAsStringSync());
+
+  peakThreshold = json['peak_threshold'];
+  msThreshold = json['ms_threshold'];
+  videoPath = json['source_video'];
+  audioPath = json['source_audio'];
+
+  dynamic editorState = json['editor_state'];
+
+  introStart = Duration(microseconds: editorState['intro_start']);
+  introEnd = introStart = Duration(microseconds: editorState['intro_end']);
+
+  final List<dynamic> micros = editorState['time_stamps'];
+  micros.map((e) => Duration(microseconds: e)).forEach((element) {
+    timeStamps.add(element);
+  });
 }
