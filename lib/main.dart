@@ -40,7 +40,8 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorSchemeSeed: const Color(0x007EA2BF),
+        brightness: Brightness.dark,
         useMaterial3: true,
       ),
       themeMode: ThemeMode.dark,
@@ -60,7 +61,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   void _navigateRoute(final BuildContext context, final String path) {
     final WidgetBuilder pageBuilder;
 
@@ -74,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       pageBuilder = (context) => const ErrorPage(
           errorMessage: 'Wrong file-format. Please make sure that the supplied file compatible.',
-          subtext: 'Compatible file formats: Video: HVEC, Audio: WAV.');
+          subtext: 'Compatible file formats: Video: HEVC, Audio: WAV.');
     }
 
     Navigator.push(
@@ -106,44 +106,49 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final Size size = MediaQuery.of(context).size;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
-          IconButton(
-            tooltip: 'Editing options',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsPage(),
-                ),
-              );
-            },
-            icon: const Icon(Icons.settings),
+          Row(
+            children: [
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsPage(),
+                    ),
+                  );
+                },
+                child: const Text('Editing options'),
+              ),
+              TextButton(
+                onPressed: () => _saveFile(),
+                child: const Text('Export'),
+              ),
+              TextButton(
+                onPressed: () => _loadFile(),
+                child: const Text('Import'),
+              ),
+            ],
           ),
-          IconButton(
-            tooltip: 'Export',
-            onPressed: () => _saveFile(),
-            icon: const Icon(Icons.save),
-          ),
-          IconButton(
-            tooltip: 'Import',
-            onPressed: () => _loadFile(),
-            icon: const Icon(Icons.upload),
-          )
         ],
+
+        centerTitle: true,
         title: Text(widget.title),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          const Divider(height: 2),
-          FileDrop(
+      body: Center(
+        child: SizedBox(
+          width: size.width - 50,
+          height: size.height - 100,
+          child: MediaFileDrop(
             fileType: 'Video or Audio',
             fileDropped: (file) => _navigateRoute(context, file.path),
           ),
-        ],
+        ),
       ),
     );
   }

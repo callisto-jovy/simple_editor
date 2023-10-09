@@ -5,9 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_slider_drawer/flutter_slider_drawer.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
 import 'package:video_editor/utils/config_util.dart' as config;
 import 'package:video_editor/widgets/custom_video_controls.dart' as custom_controls;
+import 'package:video_editor/widgets/dismissable_timestamp_tile.dart';
 
 class VideoPlayer extends StatefulWidget {
   const VideoPlayer({super.key});
@@ -22,13 +22,15 @@ class _VideoPlayerState extends State<VideoPlayer> {
   /// Create a [Player] to control playback.
   final _player = Player(
       configuration: const PlayerConfiguration(
-    title: 'Easy Editor',
+    title: 'Easy Edits',
     bufferSize: 1024 * 1024 * 1024,
     libass: true,
   ));
 
   /// Create a [VideoController] to handle video output from [Player].
   late final _controller = VideoController(_player);
+
+  final ScrollController _scrollController = ScrollController();
 
   final List<Duration> timeStamps = [];
   Duration? introStart, introEnd;
@@ -49,6 +51,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
     config.timeStamps.clear();
     config.timeStamps.addAll(timeStamps);
     _player.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -104,17 +107,14 @@ class _VideoPlayerState extends State<VideoPlayer> {
           const Spacer(),
           const MaterialDesktopFullscreenButton(),
           MaterialDesktopCustomButton(
-            onPressed: () {
-              setState(() {
-                timeStamps.add(_player.state.position);
-              });
-            },
+            onPressed: () => setState(() {
+              timeStamps.add(_player.state.position);
+            }),
             icon: const Icon(Icons.bookmark_add),
           ),
         ],
       ),
       fullscreen: const custom_controls.CustomMaterialDesktopVideoControlsThemeData(
-        // Modify theme options:
         displaySeekBar: false,
         automaticallyImplySkipNextButton: false,
         automaticallyImplySkipPreviousButton: false,
@@ -131,6 +131,64 @@ class _VideoPlayerState extends State<VideoPlayer> {
     );
   }
 
+  Widget _buildSliderColumn(final BuildContext context) {
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.all(15.0),
+          child: Text(
+            'TimeStamps',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 24,
+            ),
+          ),
+        ),
+        Expanded(
+          child: ReorderableListView.builder(
+            padding: const EdgeInsets.all(10),
+            shrinkWrap: true,
+            scrollController: _scrollController,
+            itemCount: timeStamps.length,
+            itemBuilder: (context, index) {
+              final Duration stamp = timeStamps[index];
+              return TimeStampTile(
+                  key: UniqueKey(),
+                  onDismissed: (direction) {
+                    setState(() {
+                      timeStamps.removeAt(index);
+                    });
+                  },
+                  index: index,
+                  timeStamp: stamp,
+                  expansionWidgets: [
+                    TextButton(
+                        onPressed: () => _player.seek(stamp),
+                        child: const Text('Seek to position')),
+                    TextButton(
+                        onPressed: () => introStart = stamp,
+                        child: const Text('Mark as intro start')),
+                    TextButton(
+                      onPressed: () => introEnd = stamp,
+                      child: const Text('Mark as intro stop'),
+                    ),
+                  ]);
+            },
+            onReorder: (oldIndex, newIndex) {
+              setState(() {
+                if (oldIndex < newIndex) {
+                  newIndex -= 1;
+                }
+                final Duration item = timeStamps.removeAt(oldIndex);
+                timeStamps.insert(newIndex, item);
+              });
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,64 +201,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
             appBarPadding: const EdgeInsets.all(10),
             trailing: const BackButton(),
           ),
-          slider: Column(children: [
-            const Text('TimeStamps',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 24,
-                )),
-            Expanded(
-              child: ReorderableListView.builder(
-                padding: const EdgeInsets.all(10),
-                shrinkWrap: true,
-                scrollController: ScrollController(),
-                itemCount: timeStamps.length,
-                itemBuilder: (context, index) {
-                  final Duration stamp = timeStamps[index];
-                  return Dismissible(
-                    key: UniqueKey(),
-                    direction: DismissDirection.startToEnd,
-                    background: Container(
-                      color: Colors.redAccent,
-                    ),
-                    onDismissed: (direction) {
-                      setState(() {
-                        timeStamps.removeAt(index);
-                      });
-                    },
-                    child: ExpansionTile(
-                      leading: const Icon(Icons.timer),
-                      title: Text(
-                        'Segment ${index + 1}',
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: Text(stamp.label()),
-                      children: [
-                        TextButton(
-                            onPressed: () => _player.seek(stamp),
-                            child: const Text('Seek to position')),
-                        TextButton(
-                            onPressed: () => introStart = stamp,
-                            child: const Text('Mark as intro start')),
-                        TextButton(
-                            onPressed: () => introEnd = stamp,
-                            child: const Text('Mark as intro end'))
-                      ],
-                    ),
-                  );
-                },
-                onReorder: (int oldIndex, int newIndex) {
-                  setState(() {
-                    if (oldIndex < newIndex) {
-                      newIndex -= 1;
-                    }
-                    final Duration item = timeStamps.removeAt(oldIndex);
-                    timeStamps.insert(newIndex, item);
-                  });
-                },
-              ),
-            ),
-          ]),
+          slider: _buildSliderColumn(context),
           child: _buildVideo(context)),
     );
   }

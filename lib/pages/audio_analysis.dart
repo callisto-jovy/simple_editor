@@ -89,27 +89,28 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
           ),
           Stack(
             children: [
+              PolygonWaveform(
+                samples: samples,
+                height: size.height * 0.3,
+                width: size.width * 0.95,
+              ),
               CustomPaint(
                 size: Size(
-                  size.width,
+                  size.width * 0.95,
                   size.height * 0.3,
                 ),
                 foregroundPainter: TimeStampPainter(timeStamps, lengthInMillis),
-              ),
-              SquigglyWaveform(
-                samples: samples,
-                height: size.height * 0.3,
-                width: size.width,
-                strokeWidth: 0.1,
               ),
             ],
           ),
           TextButton(onPressed: () => executeTimeStamps(), child: const Text('Run analysis'))
         ]
             .map(
-              (e) => Padding(
-                padding: const EdgeInsets.all(15),
-                child: e,
+              (e) => Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.all(15),
+                  child: e,
+                ),
               ),
             )
             .toList(),
