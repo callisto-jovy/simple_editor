@@ -492,18 +492,10 @@ class _MaterialDesktopVideoControlsState extends State<_MaterialDesktopVideoCont
       child: CallbackShortcuts(
         bindings: _theme(context).keyboardShortcuts ??
             {
-              // Default key-board shortcuts.
-              // https://support.google.com/youtube/answer/7631406
               const SingleActivator(LogicalKeyboardKey.mediaPlay): () =>
                   controller(context).player.play(),
               const SingleActivator(LogicalKeyboardKey.mediaPause): () =>
                   controller(context).player.pause(),
-              const SingleActivator(LogicalKeyboardKey.mediaPlayPause): () =>
-                  controller(context).player.playOrPause(),
-              const SingleActivator(LogicalKeyboardKey.mediaTrackNext): () =>
-                  controller(context).player.next(),
-              const SingleActivator(LogicalKeyboardKey.mediaTrackPrevious): () =>
-                  controller(context).player.previous(),
               const SingleActivator(LogicalKeyboardKey.space): () =>
                   controller(context).player.playOrPause(),
               const SingleActivator(LogicalKeyboardKey.keyJ): () {
@@ -525,12 +517,14 @@ class _MaterialDesktopVideoControlsState extends State<_MaterialDesktopVideoCont
                 controller(context).player.seek(rate);
               },
               const SingleActivator(LogicalKeyboardKey.arrowUp): () {
-                final volume = controller(context).player.state.volume + 5.0;
-                controller(context).player.setVolume(volume.clamp(0.0, 100.0));
+                final rate =
+                    controller(context).player.state.position + const Duration(seconds: 60);
+                controller(context).player.seek(rate);
               },
               const SingleActivator(LogicalKeyboardKey.arrowDown): () {
-                final volume = controller(context).player.state.volume - 5.0;
-                controller(context).player.setVolume(volume.clamp(0.0, 100.0));
+                final rate =
+                    controller(context).player.state.position - const Duration(seconds: 60);
+                controller(context).player.seek(rate);
               },
               const SingleActivator(LogicalKeyboardKey.keyF): () => toggleFullscreen(context),
               const SingleActivator(LogicalKeyboardKey.escape): () => exitFullscreen(context),
@@ -792,12 +786,15 @@ class CustomMaterialDesktopSeekBar extends StatefulWidget {
   final VoidCallback? onSeekStart;
   final VoidCallback? onSeekEnd;
   final List<Duration> timeStamps;
+  final Duration? introStart, introEnd;
 
   const CustomMaterialDesktopSeekBar({
     Key? key,
     this.onSeekStart,
     this.onSeekEnd,
     required this.timeStamps,
+    this.introStart,
+    this.introEnd,
   }) : super(key: key);
 
   @override
@@ -930,6 +927,24 @@ class CustomMaterialDesktopSeekBarState extends State<CustomMaterialDesktopSeekB
     }
   }
 
+  Widget timeStampContainer(
+      {required final BoxConstraints constraints,
+      required final Duration stamp,
+      Color? color = Colors.green}) {
+
+    return Container(
+      color: color,
+      width: 3,
+      transform: Transform.translate(
+        offset: Offset(
+            stamp.inMilliseconds *
+                (constraints.maxWidth - _theme(context).seekBarThumbSize / 2) /
+                duration.inMilliseconds,
+            0),
+      ).transform,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -978,23 +993,19 @@ class CustomMaterialDesktopSeekBarState extends State<CustomMaterialDesktopSeekB
                               : constraints.maxWidth * positionPercent,
                           color: _theme(context).seekBarPositionColor,
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: widget.timeStamps
-                              .map((e) => Container(
-                                    color: Colors.green,
-                                    width: 3,
-                                    transform: Transform.translate(
-                                      offset: Offset(
-                                          e.inMilliseconds *
-                                              (constraints.maxWidth -
-                                                  _theme(context).seekBarThumbSize) /
-                                              duration.inMilliseconds,
-                                          0),
-                                    ).transform,
-                                  ))
-                              .toList(),
-                        ),
+                        ...widget.timeStamps
+                            .map((e) => timeStampContainer(stamp: e, constraints: constraints)),
+
+                        if (widget.introStart != null)
+                          timeStampContainer(
+                              constraints: constraints,
+                              stamp: widget.introStart!,
+                              color: Colors.yellow),
+                        if (widget.introEnd != null)
+                          timeStampContainer(
+                              constraints: constraints,
+                              stamp: widget.introEnd!,
+                              color: Colors.blue),
                       ],
                     ),
                   ),

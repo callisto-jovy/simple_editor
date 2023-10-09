@@ -8,6 +8,7 @@ import 'package:path/path.dart';
 import 'package:path/path.dart' as path;
 import 'package:video_editor/pages/audio_analysis.dart';
 import 'package:video_editor/pages/error_page.dart';
+import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/pages/video_player.dart';
 import 'package:video_editor/utils/config_util.dart';
 import 'package:video_editor/utils/file_util.dart' as file_util;
@@ -59,6 +60,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
   void _navigateRoute(final BuildContext context, final String path) {
     final WidgetBuilder pageBuilder;
 
@@ -83,11 +85,23 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _saveFile() async {
     final String? result = await FilePicker.platform.saveFile(
+      allowedExtensions: ['json'],
       dialogTitle: 'Export data',
       fileName: '${path.basename(videoPath)}.json',
     );
     final File? file = result == null ? null : File(result);
     exportFile(file: file);
+  }
+
+  void _loadFile() async {
+    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+      dialogTitle: 'Import save file',
+      allowMultiple: false,
+    );
+
+    if (result != null) {
+      importFile(path: result.files[0].path);
+    }
   }
 
   @override
@@ -97,10 +111,27 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
-            tooltip: 'Export ',
+            tooltip: 'Editing options',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsPage(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.settings),
+          ),
+          IconButton(
+            tooltip: 'Export',
             onPressed: () => _saveFile(),
             icon: const Icon(Icons.save),
           ),
+          IconButton(
+            tooltip: 'Import',
+            onPressed: () => _loadFile(),
+            icon: const Icon(Icons.upload),
+          )
         ],
         title: Text(widget.title),
       ),

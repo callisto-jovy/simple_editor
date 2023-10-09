@@ -16,20 +16,30 @@ class VideoPlayer extends StatefulWidget {
   State<VideoPlayer> createState() => _VideoPlayerState();
 }
 
-/// TODO: skip one minute
+/// TODO: show intro in timeline.
+///
 class _VideoPlayerState extends State<VideoPlayer> {
   /// Create a [Player] to control playback.
-  final _player = Player();
+  final _player = Player(
+      configuration: const PlayerConfiguration(
+    title: 'Easy Editor',
+    bufferSize: 1024 * 1024 * 1024,
+    libass: true,
+  ));
 
   /// Create a [VideoController] to handle video output from [Player].
   late final _controller = VideoController(_player);
 
   final List<Duration> timeStamps = [];
+  Duration? introStart, introEnd;
 
   @override
   void initState() {
     // Open the media in a new microtask
     Future.microtask(() => _player.open(Media(config.videoPath)));
+
+    timeStamps.clear();
+    timeStamps.addAll(config.timeStamps);
 
     super.initState();
   }
@@ -49,6 +59,8 @@ class _VideoPlayerState extends State<VideoPlayer> {
       normal: custom_controls.CustomMaterialDesktopVideoControlsThemeData(
         seekBar: custom_controls.CustomMaterialDesktopSeekBar(
           timeStamps: timeStamps,
+          introStart: introStart,
+          introEnd: introEnd,
         ),
         keyboardShortcuts: {
           const SingleActivator(LogicalKeyboardKey.mediaPlay): () => _player.play(),
@@ -144,8 +156,9 @@ class _VideoPlayerState extends State<VideoPlayer> {
                 scrollController: ScrollController(),
                 itemCount: timeStamps.length,
                 itemBuilder: (context, index) {
+                  final Duration stamp = timeStamps[index];
                   return Dismissible(
-                    key: ValueKey<int>(timeStamps[index].hashCode),
+                    key: UniqueKey(),
                     direction: DismissDirection.startToEnd,
                     background: Container(
                       color: Colors.redAccent,
@@ -155,17 +168,24 @@ class _VideoPlayerState extends State<VideoPlayer> {
                         timeStamps.removeAt(index);
                       });
                     },
-                    child: InkWell(
-                      onTap: () => _player.seek(timeStamps[index]),
-                      splashColor: Colors.redAccent,
-                      child: ListTile(
-                        leading: const Icon(Icons.timer),
-                        title: Text(
-                          'Index $index',
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        subtitle: Text(timeStamps[index].label()),
+                    child: ExpansionTile(
+                      leading: const Icon(Icons.timer),
+                      title: Text(
+                        'Segment ${index + 1}',
+                        style: const TextStyle(fontWeight: FontWeight.w500),
                       ),
+                      subtitle: Text(stamp.label()),
+                      children: [
+                        TextButton(
+                            onPressed: () => _player.seek(stamp),
+                            child: const Text('Seek to position')),
+                        TextButton(
+                            onPressed: () => introStart = stamp,
+                            child: const Text('Mark as intro start')),
+                        TextButton(
+                            onPressed: () => introEnd = stamp,
+                            child: const Text('Mark as intro end'))
+                      ],
                     ),
                   );
                 },
