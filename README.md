@@ -1,16 +1,4 @@
-# video_editor
-
-Custom video editor
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Easy-Edits
+The user-friendly variant of ![Fast-Edits](https://github.com/callisto-jovy/Fast-Edits). This is an extension on top of Fast-Edits, so both applications are needed. After the editing process, this app allows to export the config which then may be imported into Fast-Edits.
+# 
+In the future, Fast-Edits will be bundled with this app and called through the JNI, a step which will seamlessly integrate Fast-Edits into this app, creating one single application - Easy-Edits
