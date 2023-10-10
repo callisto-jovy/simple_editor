@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:jni/jni.dart';
 
-import '../audio/tarsosdsp.dart';
+import 'fast_edits_backend.dart';
 
 String audioPath = '';
 String videoPath = '';
@@ -27,9 +27,7 @@ final Map<String, bool> editingOptions = {
   'FADE_OUT_VIDEO': true,
 };
 
-void exportFile({File? file}) {
-  file ??= File('saved_state.json');
-
+String toJson() {
   final JList<JDouble> beatTimes =
       AudioAnalyser.analyseBeats(JString.fromString(audioPath), peakThreshold, msThreshold);
 
@@ -46,7 +44,13 @@ void exportFile({File? file}) {
       'editing_flags': editingOptions
     }
   };
-  file.writeAsString(encoder.convert(json));
+  return encoder.convert(json);
+}
+
+void exportFile({File? file}) {
+  file ??= File('saved_state.json');
+
+  file.writeAsString(toJson());
 }
 
 void importFile({String? path}) {

@@ -1,0 +1,3 @@
+[submodule "fast_edits_backend"]
+	path = fast_edits_backend
+	url = https://github.com/callisto-jovy/fast_edits_backend.git

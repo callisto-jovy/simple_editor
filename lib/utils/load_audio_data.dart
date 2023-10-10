@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 List<double> chopSamples(final List<double> rawSamples, final int totalSamples) {
-  List<double> filteredData = [];
+  final List<double> filteredData = [];
   // Change this value to number of audio samples you want.
   // Values between 256 and 1024 are good for showing [RectangleWaveform] and [SquigglyWaveform]
   // While the values above them are good for showing [PolygonWaveform]
