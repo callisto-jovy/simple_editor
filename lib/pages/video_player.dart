@@ -16,7 +16,6 @@ class VideoPlayer extends StatefulWidget {
   State<VideoPlayer> createState() => _VideoPlayerState();
 }
 
-/// TODO: show intro in timeline.
 ///
 class _VideoPlayerState extends State<VideoPlayer> {
   /// Create a [Player] to control playback.
@@ -95,6 +94,9 @@ class _VideoPlayerState extends State<VideoPlayer> {
           },
           const SingleActivator(LogicalKeyboardKey.keyF): () => toggleFullscreen(context),
           const SingleActivator(LogicalKeyboardKey.escape): () => exitFullscreen(context),
+          const SingleActivator(LogicalKeyboardKey.keyX): () => setState(() {
+                timeStamps.add(_player.state.position);
+              })
         },
         buttonBarButtonSize: 24.0,
         buttonBarButtonColor: Colors.white,

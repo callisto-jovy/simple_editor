@@ -10,14 +10,15 @@ import 'package:video_editor/pages/audio_analysis.dart';
 import 'package:video_editor/pages/error_page.dart';
 import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/pages/video_player.dart';
-import 'package:video_editor/utils/config_util.dart';
+import 'package:video_editor/utils/config_util.dart' as config;
+import 'package:video_editor/utils/fast_edits_backend.dart';
 import 'package:video_editor/utils/file_util.dart' as file_util;
 import 'package:video_editor/widgets/file_drop.dart';
 
 void main() {
   Jni.spawn(
     dylibDir: join('build', 'jni_libs'),
-    classPath: ['TarsosDSP/core/build/classes/java/main'],
+    classPath: ['fast_edits_backend/target/classes'],
   );
 
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,10 +66,10 @@ class _MyHomePageState extends State<MyHomePage> {
     final WidgetBuilder pageBuilder;
 
     if (file_util.isFileAudio(path)) {
-      audioPath = path;
+      config.audioPath = path;
       pageBuilder = (context) => const AudioAnalysis();
     } else if (file_util.isFileVideo(path)) {
-      videoPath = path;
+      config.videoPath = path;
 
       pageBuilder = (context) => const VideoPlayer();
     } else {
@@ -87,10 +88,10 @@ class _MyHomePageState extends State<MyHomePage> {
     final String? result = await FilePicker.platform.saveFile(
       allowedExtensions: ['json'],
       dialogTitle: 'Export data',
-      fileName: '${path.basename(videoPath)}.json',
+      fileName: '${path.basename(config.videoPath)}.json',
     );
     final File? file = result == null ? null : File(result);
-    exportFile(file: file);
+    config.exportFile(file: file);
   }
 
   void _loadFile() async {
@@ -100,8 +101,15 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     if (result != null) {
-      importFile(path: result.files[0].path);
+      config.importFile(path: result.files[0].path);
     }
+  }
+
+  void _edit() async {
+    //TODO: Make sure that the state is fulfilled.
+    final String json = config.toJson();
+
+    EditorWrapper.edit(JString.fromString(json), false);
   }
 
   @override
@@ -133,10 +141,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () => _loadFile(),
                 child: const Text('Import'),
               ),
+              TextButton(onPressed: () => _edit(), child: const Text('Edit'))
             ],
           ),
         ],
-
         centerTitle: true,
         title: Text(widget.title),
       ),

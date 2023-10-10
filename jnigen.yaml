@@ -1,16 +1,24 @@
 output:
   c:
-    library_name: tarsosDSP
-    path: src/be/tarsos/dsp/
+    library_name: fast_edits_backend
+    path: src/de/yugata/
   dart:
-    path: lib/audio/tarsosdsp.dart
+    path: lib/utils/fast_edits_backend.dart
     structure: single_file
 
 
 source_path:
-  - 'TarsosDSP/core/src/main/java'
+  - 'fast_edits_backend/src/main/java/'
 
 classes:
-  - 'de.yugata.audio.AudioAnalyser'
+  - 'de.yugata.fast.edits.audio.AudioAnalyser'
+  - 'de.yugata.fast.edits.editor.EditorWrapper'
 
 
+maven_downloads:
+  ## For these dependencies, both source and JARs are downloaded.
+  source_deps:
+      - 'com.google.code.gson:gson:2.10.1'
+      - 'org.bytedeco:ffmpeg-platform-gpl:6.0-1.5.9'
+      - 'org.bytedeco:ffmpeg-platform:6.0-1.5.9'
+      - 'org.bytedeco:javacv-platform:1.5.9'
