@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:jni/jni.dart';
+import 'package:video_editor/utils/model/timestamp.dart';
 
 import 'fast_edits_backend.dart';
 
@@ -13,7 +15,7 @@ double msThreshold = 0;
 
 Duration? introStart, introEnd;
 
-final List<Duration> timeStamps = [];
+final List<TimeStamp> timeStamps = [];
 
 const JsonEncoder encoder = JsonEncoder.withIndent('  ');
 
@@ -39,10 +41,11 @@ String toJson() {
     'editor_state': {
       'intro_start': introStart == null ? -1 : introStart!.inMicroseconds,
       'intro_end': introEnd == null ? -1 : introEnd!.inMicroseconds,
-      'time_stamps': timeStamps.map((e) => e.inMicroseconds).toList(),
+      'time_stamps': timeStamps.map((e) => e.start.inMicroseconds).toList(),
       'beat_times': beatTimes.map((e) => e.doubleValue(releaseOriginal: true)).toList(),
       'editing_flags': editingOptions
-    }
+    },
+    'thumbnails': timeStamps.map((e) => base64Encode(Uint8List.view(e.startFrame!.buffer))).toList()
   };
   return encoder.convert(json);
 }
@@ -55,6 +58,8 @@ void exportFile({File? file}) {
 
 void importFile({String? path}) {
   if (path == null || path.isEmpty) return;
+
+  timeStamps.clear();
 
   final File file = File(path);
   dynamic json = jsonDecode(file.readAsStringSync());
@@ -70,7 +75,16 @@ void importFile({String? path}) {
   introEnd = introStart = Duration(microseconds: editorState['intro_end']);
 
   final List<dynamic> micros = editorState['time_stamps'];
-  micros.map((e) => Duration(microseconds: e)).forEach((element) {
-    timeStamps.add(element);
-  });
+  final List<dynamic>? thumbnails = json['thumbnails'];
+
+  for (int i = 0; i < micros.length; i++) {
+    final Duration duration = Duration(microseconds: micros[i]);
+
+    if (thumbnails != null && thumbnails.length > i && thumbnails[i] != null) {
+      final String thumbnail = thumbnails[i];
+      timeStamps.add(TimeStamp(duration, base64Decode(thumbnail).buffer.asByteData()));
+    } else {
+      timeStamps.add(TimeStamp(duration, null));
+    }
+  }
 }
