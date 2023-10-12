@@ -2,6 +2,7 @@ import 'package:cross_file/cross_file.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:icons_plus/icons_plus.dart';
 
 class MediaFileDrop extends StatefulWidget {
   final String fileType;
@@ -55,7 +56,7 @@ class _MediaFileDropState extends State<MediaFileDrop> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.perm_media_sharp, size: 128),
+                const Icon(Icons.perm_media, size: 128),
                 const Padding(padding: EdgeInsets.all(15)),
                 Text(
                   "DROP ${widget.fileType.toUpperCase()} HERE OR CLICK TO IMPORT.",
