@@ -39,14 +39,31 @@ class _VideoPlayerState extends State<VideoPlayer> {
   final List<TimeStamp> timeStamps = [];
   Duration? introStart, introEnd;
 
+  Future<void> _loadTimeStamps() async {
+    for (final TimeStamp stamp in config.timeStamps) {
+
+
+      if (stamp.startFrame == null) {
+        await _player.seek(stamp.start);
+        final Uint8List? frame = await _player.screenshot();
+
+        timeStamps.add(await createTimeStamp(stamp.start, frame));
+      } else {
+        timeStamps.add(stamp);
+      }
+    }
+    setState(() {
+      _player.seek(const Duration(seconds: 0));
+    });
+  }
+
   @override
   void initState() {
     // Open the media in a new microtask
-    Future.microtask(() => _player.open(Media(config.videoPath)));
-
-    //TODO: Find a better solution
-    // timeStamps.clear();
-    // timeStamps.addAll(config.timeStamps);
+    Future.microtask(() async {
+      await _player.open(Media(config.videoPath));
+      _loadTimeStamps();
+    });
 
     super.initState();
   }
@@ -54,9 +71,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
   @override
   void dispose() {
     config.timeStamps.clear();
-    for (final TimeStamp element in timeStamps) {
-      config.timeStamps.add(element.start);
-    }
+    config.timeStamps.addAll(timeStamps);
     _player.dispose();
     _scrollController.dispose();
     super.dispose();
