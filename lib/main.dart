@@ -24,6 +24,7 @@ void main() {
     classPath: ['fast_edits_backend/target/classes'],
   );
 
+
   WidgetsFlutterBinding.ensureInitialized();
   // Necessary initialization for package:media_kit.
   MediaKit.ensureInitialized();

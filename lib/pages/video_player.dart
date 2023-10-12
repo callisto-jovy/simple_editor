@@ -11,6 +11,8 @@ import 'package:video_editor/utils/config_util.dart' as config;
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/widgets/custom_video_controls.dart' as custom_controls;
 
+import '../widgets/cache_image_provider.dart';
+
 class VideoPlayer extends StatefulWidget {
   const VideoPlayer({super.key});
 
@@ -102,11 +104,18 @@ class _VideoPlayerState extends State<VideoPlayer> {
             },
             const SingleActivator(LogicalKeyboardKey.keyF): () => toggleFullscreen(context),
             const SingleActivator(LogicalKeyboardKey.escape): () => exitFullscreen(context),
-            const SingleActivator(LogicalKeyboardKey.keyX): () => setState(() {
-                  final Duration pos = _player.state.position;
-                  _player.screenshot().then((frame) =>
-                      createTimeStamp(pos, frame).then((value) => timeStamps.add(value)));
-                })
+            const SingleActivator(LogicalKeyboardKey.keyX): () {
+              final Duration pos = _player.state.position;
+              Future.microtask(() async {
+                final Uint8List? frame = await _player.screenshot();
+
+                createTimeStamp(pos, frame).then((value) {
+                  setState(() {
+                    timeStamps.add(value);
+                  });
+                });
+              });
+            }
           },
           buttonBarButtonSize: 24.0,
           buttonBarButtonColor: Colors.white,
@@ -192,10 +201,13 @@ class _VideoPlayerState extends State<VideoPlayer> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Image.memory(
-                          Uint8List.view(stamp.startFrame!.buffer),
+                        child: Image(
                           fit: BoxFit.cover,
                           filterQuality: FilterQuality.low,
+                          image: CacheImageProvider(
+                            '${stamp.start}',
+                            Uint8List.view(stamp.startFrame!.buffer),
+                          ),
                         ),
                       ),
                       Padding(
@@ -219,15 +231,13 @@ class _VideoPlayerState extends State<VideoPlayer> {
             },
             itemCount: timeStamps.length,
             onReorder: (oldIndex, newIndex) {
-              setState(
-                () {
-                  if (oldIndex < newIndex) {
-                    newIndex -= 1;
-                  }
-                  final TimeStamp item = timeStamps.removeAt(oldIndex);
-                  timeStamps.insert(newIndex, item);
-                },
-              );
+              if (oldIndex < newIndex) {
+                newIndex -= 1;
+              }
+              setState(() {
+                final TimeStamp item = timeStamps.removeAt(oldIndex);
+                timeStamps.insert(newIndex, item);
+              });
             },
             scrollController: _timeLineScroll,
             scrollDirection: Axis.horizontal,
