@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:jni/jni.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 
-import 'fast_edits_backend.dart';
+import 'easy_edits_backend.dart';
 
 String audioPath = '';
 String videoPath = '';

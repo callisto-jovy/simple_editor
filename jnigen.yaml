@@ -1,24 +1,31 @@
 output:
   c:
-    library_name: fast_edits_backend
+    library_name: easy_edits
     path: src/de/yugata/
   dart:
-    path: lib/utils/fast_edits_backend.dart
+    path: lib/utils/easy_edits_backend.dart
     structure: single_file
 
 
+log_level: all
+summarizer:
+  backend: asm
+
+
+class_path:
+  - 'easy_edits\core\target\classes'
+
 source_path:
-  - 'fast_edits_backend/src/main/java/'
+  - 'easy_edits\core\src\main\java\'
 
 classes:
-  - 'de.yugata.fast.edits.audio.AudioAnalyser'
-  - 'de.yugata.fast.edits.editor.EditorWrapper'
+  - 'de.yugata.easy.edits.audio.AudioAnalyser'
+  - 'de.yugata.easy.edits.editor.FlutterWrapper'
 
 
 maven_downloads:
-  ## For these dependencies, both source and JARs are downloaded.
-  source_deps:
+  jar_only_deps:
       - 'com.google.code.gson:gson:2.10.1'
-      - 'org.bytedeco:ffmpeg-platform-gpl:6.0-1.5.9'
-      - 'org.bytedeco:ffmpeg-platform:6.0-1.5.9'
       - 'org.bytedeco:javacv-platform:1.5.9'
+      - 'commons-io:commons-io:2.13.0'
+
