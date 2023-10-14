@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,6 @@ import 'package:video_editor/utils/config_util.dart' as config;
 import 'package:video_editor/utils/easy_edits_backend.dart';
 import 'package:video_editor/utils/file_util.dart' as file_util;
 import 'package:video_editor/widgets/file_drop.dart';
-
 
 const jarError = 'No JAR files were found.\n'
     'Run `dart run jnigen:download_maven_jars --config jnigen.yaml` '
@@ -46,7 +46,6 @@ void main() {
     dylibDir: join('build', 'jni_libs'),
     classPath: ['easy_edits/core/target/classes', ...jars],
   );
-
 
   WidgetsFlutterBinding.ensureInitialized();
   // Necessary initialization for package:media_kit.
@@ -132,11 +131,20 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _edit() async {
+  Future<void> _edit() async {
+    await config.ensureOutExists();
     //TODO: Make sure that the state is fulfilled.
     final String json = config.toJson();
+    // Run the export process in a new isolate
+    await Isolate.run(() => FlutterWrapper.edit(JString.fromString(json)));
+  }
 
-    FlutterWrapper.exportSegments(JString.fromString(json));
+  Future<void> _exportSegments() async {
+    await config.ensureOutExists();
+    //TODO: Make sure that the state is fulfilled.
+    final String json = config.toJson();
+    // Run the export process in a new isolate
+    await Isolate.run(() => FlutterWrapper.exportSegments(JString.fromString(json)));
   }
 
   @override
@@ -158,7 +166,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   );
                 },
-                child: const Text('Editing options'),
+                child: const Text('Settings'),
               ),
               TextButton(
                 onPressed: () => _saveFile(),
@@ -168,7 +176,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () => _loadFile(),
                 child: const Text('Import'),
               ),
-              TextButton(onPressed: () => _edit(), child: const Text('Edit'))
+              TextButton(
+                onPressed: () => _edit(),
+                child: const Text('Edit'),
+              ),
+              TextButton(
+                onPressed: () => _exportSegments(),
+                child: const Text('Export Segments'),
+              )
             ],
           ),
         ],
