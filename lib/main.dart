@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:jni/jni.dart';
+import 'package:local_notifier/local_notifier.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:path/path.dart';
 import 'package:path/path.dart' as path;
@@ -11,7 +12,7 @@ import 'package:video_editor/pages/audio_analysis.dart';
 import 'package:video_editor/pages/error_page.dart';
 import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/pages/video_player.dart';
-import 'package:video_editor/utils/config_util.dart' as config;
+import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/easy_edits_backend.dart';
 import 'package:video_editor/utils/file_util.dart' as file_util;
 import 'package:video_editor/widgets/file_drop.dart';
@@ -21,12 +22,12 @@ const jarError = 'No JAR files were found.\n'
     'in plugin directory.\n'
     'Alternatively, regenerate JNI bindings in plugin directory, which will '
     'automatically download the JAR files.';
+// It's required to manually provide the JAR files as classpath when
+// spawning the JVM.
+const jarDir = 'mvn_jar';
 
-void main() {
-  // It's required to manually provide the JAR files as classpath when
-  // spawning the JVM.
-  const jarDir = 'mvn_jar';
-  List<String> jars;
+Future<void> main() async {
+  final List<String> jars;
   try {
     jars = Directory(jarDir)
         .listSync()
@@ -45,6 +46,11 @@ void main() {
   Jni.spawn(
     dylibDir: join('build', 'jni_libs'),
     classPath: ['easy_edits/core/target/classes', ...jars],
+  );
+
+  await localNotifier.setup(
+    appName: 'local_notifier_example',
+    shortcutPolicy: ShortcutPolicy.requireCreate,
   );
 
   WidgetsFlutterBinding.ensureInitialized();
@@ -136,7 +142,12 @@ class _MyHomePageState extends State<MyHomePage> {
     //TODO: Make sure that the state is fulfilled.
     final String json = config.toJson();
     // Run the export process in a new isolate
-    await Isolate.run(() => FlutterWrapper.edit(JString.fromString(json)));
+    await Isolate.run(() => FlutterWrapper.edit(JString.fromString(json))).then((value) {
+      LocalNotification(
+        title: 'Easy Edits',
+        body: 'Done editing.',
+      ).show();
+    });
   }
 
   Future<void> _exportSegments() async {
@@ -144,7 +155,12 @@ class _MyHomePageState extends State<MyHomePage> {
     //TODO: Make sure that the state is fulfilled.
     final String json = config.toJson();
     // Run the export process in a new isolate
-    await Isolate.run(() => FlutterWrapper.exportSegments(JString.fromString(json)));
+    await Isolate.run(() => FlutterWrapper.exportSegments(JString.fromString(json))).then((value) {
+      LocalNotification(
+        title: 'Easy Edits',
+        body: 'Done exporting the segments.',
+      ).show();
+    });
   }
 
   @override
