@@ -25,10 +25,6 @@ final Map<String, bool> editingOptions = {
   'SHUFFLE_SEQUENCES': false,
 };
 
-
-
-
-
 String toJson() {
   final JList<JDouble> beatTimes =
       AudioAnalyser.analyseBeats(JString.fromString(audioPath), peakThreshold, msThreshold);
@@ -38,6 +34,8 @@ String toJson() {
     'source_audio': audioPath,
     'peak_threshold': peakThreshold,
     'ms_threshold': msThreshold,
+    'working_path': 'editor_out', //TODO: Setting for path
+    'output_path': 'edit_out.mp4', //TODO: Request for filename
     'editor_state': {
       'intro_start': introStart == null ? -1 : introStart!.inMicroseconds,
       'intro_end': introEnd == null ? -1 : introEnd!.inMicroseconds,
@@ -46,8 +44,9 @@ String toJson() {
       'editing_flags': editingOptions,
       'filters': [], // TODO: Enable & configure filters in the ui
     },
-    'thumbnails': timeStamps.map((e) => base64Encode(Uint8List.view(e.startFrame!.buffer))).toList()
+    'thumbnails': timeStamps.map((e) => e.startFrame == null ? null : base64Encode(Uint8List.view(e.startFrame!.buffer))).toList()
   };
+
   return encoder.convert(json);
 }
 

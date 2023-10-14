@@ -8,15 +8,18 @@ output:
 
 
 log_level: all
+
 summarizer:
   backend: asm
+  extra_args:
+    - '-M'
 
 
 class_path:
-  - 'easy_edits\core\target\classes'
+  - 'easy_edits\core\target\classes\'
 
 source_path:
-  - 'easy_edits\core\src\main\java\'
+  - 'easy_edits/core/src/main/java/'
 
 classes:
   - 'de.yugata.easy.edits.audio.AudioAnalyser'
@@ -24,8 +27,9 @@ classes:
 
 
 maven_downloads:
-  jar_only_deps:
-      - 'com.google.code.gson:gson:2.10.1'
-      - 'org.bytedeco:javacv-platform:1.5.9'
-      - 'commons-io:commons-io:2.13.0'
+  source_deps:
+    - 'com.google.code.gson:gson:2.10.1'
+    - 'org.bytedeco:javacv-platform:1.5.9'
+    - 'org.bytedeco:ffmpeg-platform:6.0-1.5.9'
+    - 'commons-io:commons-io:2.13.0'
 
