@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_audio_waveforms/flutter_audio_waveforms.dart';
 import 'package:jni/jni.dart';
 import 'package:path/path.dart' as path;
-import 'package:video_editor/utils/config_util.dart' as config;
+import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/easy_edits_backend.dart';
-import 'package:video_editor/utils/load_audio_data.dart';
+import 'package:video_editor/utils/audio_data_loader.dart';
 import 'package:video_editor/widgets/time_stamp_painer.dart';
 import 'package:wav/wav_file.dart';
 

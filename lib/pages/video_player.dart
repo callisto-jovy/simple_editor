@@ -7,7 +7,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
 import 'package:video_editor/pages/settings_page.dart';
-import 'package:video_editor/utils/config_util.dart' as config;
+import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/widgets/custom_video_controls.dart' as custom_controls;
 
