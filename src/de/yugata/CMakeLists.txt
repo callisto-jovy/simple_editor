@@ -5,17 +5,17 @@
 # the plugin to fail to compile for some customers of the plugin.
 cmake_minimum_required(VERSION 3.10)
 
-project(fast_edits_backend VERSION 0.0.1 LANGUAGES C)
+project(easy_edits VERSION 0.0.1 LANGUAGES C)
 
-add_library(fast_edits_backend SHARED
-  "./fast_edits_backend.c"
+add_library(easy_edits SHARED
+  "./easy_edits.c"
 )
 
-set_target_properties(fast_edits_backend PROPERTIES
-  OUTPUT_NAME "fast_edits_backend"
+set_target_properties(easy_edits PROPERTIES
+  OUTPUT_NAME "easy_edits"
 )
 
-target_compile_definitions(fast_edits_backend PUBLIC DART_SHARED_LIB)
+target_compile_definitions(easy_edits PUBLIC DART_SHARED_LIB)
 
 if(WIN32)
 	set_target_properties(${TARGET_NAME} PROPERTIES
@@ -23,10 +23,10 @@ if(WIN32)
 endif()
 
 if (ANDROID)
-	target_link_libraries(fast_edits_backend log)
+	target_link_libraries(easy_edits log)
 else()
 	find_package(Java REQUIRED)
 	find_package(JNI REQUIRED)
 	include_directories(${JNI_INCLUDE_DIRS})
-	target_link_libraries(fast_edits_backend ${JNI_LIBRARIES})
+	target_link_libraries(easy_edits ${JNI_LIBRARIES})
 endif()

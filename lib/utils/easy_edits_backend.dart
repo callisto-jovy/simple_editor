@@ -24,9 +24,9 @@ import "package:jni/jni.dart" as jni;
 // Auto-generated initialization code.
 
 final ffi.Pointer<T> Function<T extends ffi.NativeType>(String sym) jniLookup =
-    ProtectedJniExtensions.initGeneratedLibrary("fast_edits_backend");
+    ProtectedJniExtensions.initGeneratedLibrary("easy_edits");
 
-/// from: de.yugata.fast.edits.audio.AudioAnalyser
+/// from: de.yugata.easy.edits.audio.AudioAnalyser
 class AudioAnalyser extends jni.JObject {
   @override
   late final jni.JObjType<AudioAnalyser> $type = type;
@@ -54,15 +54,15 @@ class AudioAnalyser extends jni.JObject {
       .asFunction<
           jni.JniResult Function(ffi.Pointer<ffi.Void>, double, double)>();
 
-  /// from: static public java.util.List<java.lang.Double> analyseBeats(java.lang.String audioInput, double peakThreshold, double msThreshold)
+  /// from: static public java.util.List analyseBeats(java.lang.String string, double d, double d1)
   /// The returned object must be released after use, by calling the [release] method.
   static jni.JList<jni.JDouble> analyseBeats(
-    jni.JString audioInput,
-    double peakThreshold,
-    double msThreshold,
+    jni.JString string,
+    double d,
+    double d1,
   ) {
-    return const jni.JListType(jni.JDoubleType()).fromRef(
-        _analyseBeats(audioInput.reference, peakThreshold, msThreshold).object);
+    return const jni.JListType(jni.JDoubleType())
+        .fromRef(_analyseBeats(string.reference, d, d1).object);
   }
 
   static final _analyseStamps = jniLookup<
@@ -72,16 +72,15 @@ class AudioAnalyser extends jni.JObject {
       .asFunction<
           jni.JniResult Function(ffi.Pointer<ffi.Void>, double, double)>();
 
-  /// from: static public java.util.List<java.lang.Double> analyseStamps(java.lang.String audioInput, double peakThreshold, double msThreshold)
+  /// from: static public java.util.List analyseStamps(java.lang.String string, double d, double d1)
   /// The returned object must be released after use, by calling the [release] method.
   static jni.JList<jni.JDouble> analyseStamps(
-    jni.JString audioInput,
-    double peakThreshold,
-    double msThreshold,
+    jni.JString string,
+    double d,
+    double d1,
   ) {
-    return const jni.JListType(jni.JDoubleType()).fromRef(
-        _analyseStamps(audioInput.reference, peakThreshold, msThreshold)
-            .object);
+    return const jni.JListType(jni.JDoubleType())
+        .fromRef(_analyseStamps(string.reference, d, d1).object);
   }
 
   static final _analyseBeats1 = jniLookup<
@@ -95,15 +94,14 @@ class AudioAnalyser extends jni.JObject {
           jni.JniResult Function(
               ffi.Pointer<ffi.Void>, double, double, ffi.Pointer<ffi.Void>)>();
 
-  /// from: static public void analyseBeats(java.lang.String audioInput, double peakThreshold, double msThreshold, be.tarsos.dsp.onsets.OnsetHandler tracker)
+  /// from: static public void analyseBeats(java.lang.String string, double d, double d1, be.tarsos.dsp.onsets.OnsetHandler onsetHandler)
   static void analyseBeats1(
-    jni.JString audioInput,
-    double peakThreshold,
-    double msThreshold,
-    jni.JObject tracker,
+    jni.JString string,
+    double d,
+    double d1,
+    jni.JObject onsetHandler,
   ) {
-    return _analyseBeats1(
-            audioInput.reference, peakThreshold, msThreshold, tracker.reference)
+    return _analyseBeats1(string.reference, d, d1, onsetHandler.reference)
         .check();
   }
 }
@@ -112,7 +110,7 @@ final class $AudioAnalyserType extends jni.JObjType<AudioAnalyser> {
   const $AudioAnalyserType();
 
   @override
-  String get signature => r"Lde/yugata/fast/edits/audio/AudioAnalyser;";
+  String get signature => r"Lde/yugata/easy/edits/audio/AudioAnalyser;";
 
   @override
   AudioAnalyser fromRef(jni.JObjectPtr ref) => AudioAnalyser.fromRef(ref);
@@ -133,50 +131,61 @@ final class $AudioAnalyserType extends jni.JObjType<AudioAnalyser> {
   }
 }
 
-/// from: de.yugata.fast.edits.editor.EditorWrapper
-class EditorWrapper extends jni.JObject {
+/// from: de.yugata.easy.edits.editor.FlutterWrapper
+class FlutterWrapper extends jni.JObject {
   @override
-  late final jni.JObjType<EditorWrapper> $type = type;
+  late final jni.JObjType<FlutterWrapper> $type = type;
 
-  EditorWrapper.fromRef(
+  FlutterWrapper.fromRef(
     jni.JObjectPtr ref,
   ) : super.fromRef(ref);
 
   /// The type which includes information such as the signature of this class.
-  static const type = $EditorWrapperType();
+  static const type = $FlutterWrapperType();
   static final _new0 = jniLookup<ffi.NativeFunction<jni.JniResult Function()>>(
-          "EditorWrapper__new0")
+          "FlutterWrapper__new0")
       .asFunction<jni.JniResult Function()>();
 
   /// from: public void <init>()
   /// The returned object must be released after use, by calling the [release] method.
-  factory EditorWrapper() {
-    return EditorWrapper.fromRef(_new0().object);
+  factory FlutterWrapper() {
+    return FlutterWrapper.fromRef(_new0().object);
   }
 
-  static final _edit = jniLookup<
-          ffi.NativeFunction<
-              jni.JniResult Function(
-                  ffi.Pointer<ffi.Void>, ffi.Uint8)>>("EditorWrapper__edit")
-      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>, int)>();
+  static final _getFilterValueMap =
+      jniLookup<ffi.NativeFunction<jni.JniResult Function()>>(
+              "FlutterWrapper__getFilterValueMap")
+          .asFunction<jni.JniResult Function()>();
 
-  /// from: static public void edit(java.lang.String json, boolean useSegments)
-  static void edit(
-    jni.JString json,
-    bool useSegments,
+  /// from: static public java.util.Map getFilterValueMap()
+  /// The returned object must be released after use, by calling the [release] method.
+  static jni.JMap<jni.JString, jni.JString> getFilterValueMap() {
+    return const jni.JMapType(jni.JStringType(), jni.JStringType())
+        .fromRef(_getFilterValueMap().object);
+  }
+
+  static final _exportSegments = jniLookup<
+              ffi
+              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
+          "FlutterWrapper__exportSegments")
+      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
+
+  /// from: static public void exportSegments(java.lang.String string)
+  static void exportSegments(
+    jni.JString string,
   ) {
-    return _edit(json.reference, useSegments ? 1 : 0).check();
+    return _exportSegments(string.reference).check();
   }
 }
 
-final class $EditorWrapperType extends jni.JObjType<EditorWrapper> {
-  const $EditorWrapperType();
+final class $FlutterWrapperType extends jni.JObjType<FlutterWrapper> {
+  const $FlutterWrapperType();
 
   @override
-  String get signature => r"Lde/yugata/fast/edits/editor/EditorWrapper;";
+  String get signature => r"Lde/yugata/easy/edits/editor/FlutterWrapper;";
 
   @override
-  EditorWrapper fromRef(jni.JObjectPtr ref) => EditorWrapper.fromRef(ref);
+  FlutterWrapper fromRef(jni.JObjectPtr ref) => FlutterWrapper.fromRef(ref);
 
   @override
   jni.JObjType get superType => const jni.JObjectType();
@@ -185,11 +194,11 @@ final class $EditorWrapperType extends jni.JObjType<EditorWrapper> {
   final superCount = 1;
 
   @override
-  int get hashCode => ($EditorWrapperType).hashCode;
+  int get hashCode => ($FlutterWrapperType).hashCode;
 
   @override
   bool operator ==(Object other) {
-    return other.runtimeType == ($EditorWrapperType) &&
-        other is $EditorWrapperType;
+    return other.runtimeType == ($FlutterWrapperType) &&
+        other is $FlutterWrapperType;
   }
 }

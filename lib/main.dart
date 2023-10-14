@@ -11,7 +11,7 @@ import 'package:video_editor/pages/error_page.dart';
 import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/pages/video_player.dart';
 import 'package:video_editor/utils/config_util.dart' as config;
-import 'package:video_editor/utils/fast_edits_backend.dart';
+import 'package:video_editor/utils/easy_edits_backend.dart';
 import 'package:video_editor/utils/file_util.dart' as file_util;
 import 'package:video_editor/widgets/file_drop.dart';
 
@@ -112,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
     //TODO: Make sure that the state is fulfilled.
     final String json = config.toJson();
 
-    EditorWrapper.edit(JString.fromString(json), false);
+    FlutterWrapper.exportSegments(JString.fromString(json));
   }
 
   @override
