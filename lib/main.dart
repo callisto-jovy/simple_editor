@@ -14,7 +14,6 @@ import 'package:video_editor/utils/config_util.dart' as config;
 import 'package:video_editor/utils/fast_edits_backend.dart';
 import 'package:video_editor/utils/file_util.dart' as file_util;
 import 'package:video_editor/widgets/file_drop.dart';
-import 'package:icons_plus/icons_plus.dart';
 
 
 

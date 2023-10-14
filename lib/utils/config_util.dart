@@ -23,11 +23,11 @@ final Map<String, bool> editingOptions = {
   'WRITE_HDR_OPTIONS': true,
   'BEST_QUALITY': true,
   'SHUFFLE_SEQUENCES': false,
-  'INTERPOLATE_FRAMES': false,
-  'FADE_TRANSITION': false,
-  'ZOOM_IN': false,
-  'FADE_OUT_VIDEO': true,
 };
+
+
+
+
 
 String toJson() {
   final JList<JDouble> beatTimes =
@@ -43,7 +43,8 @@ String toJson() {
       'intro_end': introEnd == null ? -1 : introEnd!.inMicroseconds,
       'time_stamps': timeStamps.map((e) => e.start.inMicroseconds).toList(),
       'beat_times': beatTimes.map((e) => e.doubleValue(releaseOriginal: true)).toList(),
-      'editing_flags': editingOptions
+      'editing_flags': editingOptions,
+      'filters': [], // TODO: Enable & configure filters in the ui
     },
     'thumbnails': timeStamps.map((e) => base64Encode(Uint8List.view(e.startFrame!.buffer))).toList()
   };
