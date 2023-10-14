@@ -48,14 +48,14 @@ Future<void> main() async {
     classPath: ['easy_edits/core/target/classes', ...jars],
   );
 
+  WidgetsFlutterBinding.ensureInitialized();
+  // Necessary initialization for package:media_kit.
+  MediaKit.ensureInitialized();
+
   await localNotifier.setup(
     appName: 'local_notifier_example',
     shortcutPolicy: ShortcutPolicy.requireCreate,
   );
-
-  WidgetsFlutterBinding.ensureInitialized();
-  // Necessary initialization for package:media_kit.
-  MediaKit.ensureInitialized();
 
   runApp(const MyApp());
 }
