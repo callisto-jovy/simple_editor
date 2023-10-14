@@ -176,6 +176,19 @@ class FlutterWrapper extends jni.JObject {
   ) {
     return _exportSegments(string.reference).check();
   }
+
+  static final _edit = jniLookup<
+              ffi
+              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
+          "FlutterWrapper__edit")
+      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
+
+  /// from: static public void edit(java.lang.String string)
+  static void edit(
+    jni.JString string,
+  ) {
+    return _edit(string.reference).check();
+  }
 }
 
 final class $FlutterWrapperType extends jni.JObjType<FlutterWrapper> {

@@ -14,6 +14,7 @@ summarizer:
   extra_args:
     - '-M'
 
+suspend_fun_to_async: true
 
 class_path:
   - 'easy_edits\core\target\classes\'
