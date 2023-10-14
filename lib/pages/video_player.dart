@@ -227,7 +227,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(10.0),
-                        child: Text(stamp.start.label()),
+                        child: Text('${stamp.start.label()} Segment ${index + 1}'),
                       ),
                       TextButton(
                           onPressed: () => _player.seek(stamp.start),
