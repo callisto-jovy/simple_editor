@@ -192,71 +192,75 @@ class _VideoPlayerState extends State<VideoPlayer> {
       child: SizedBox(
         width: size.width,
         child: Card(
-          child: ReorderableListView.builder(
-            proxyDecorator: proxyDecorator,
-            itemBuilder: (context, index) {
-              final TimeStamp stamp = timeStamps[index];
-              return Card(
-                key: Key('$stamp$index'),
-                elevation: 5,
-                child: Dismissible(
-                  key: UniqueKey(),
-                  direction: DismissDirection.down,
-                  background: Container(
-                    color: Colors.redAccent,
-                  ),
-                  onDismissed: (direction) {
-                    setState(() {
-                      timeStamps.removeAt(index);
-                    });
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Image(
-                          fit: BoxFit.cover,
-                          filterQuality: FilterQuality.low,
-                          image: CacheImageProvider(
-                            '${stamp.start}',
-                            Uint8List.view(stamp.startFrame!.buffer),
+          child: Scrollbar(
+            controller: _timeLineScroll,
+            child: ReorderableListView.builder(
+              proxyDecorator: proxyDecorator,
+              itemBuilder: (context, index) {
+                final TimeStamp stamp = timeStamps[index];
+                return Card(
+                  key: Key('$stamp$index'),
+                  elevation: 5,
+                  child: Dismissible(
+                    key: UniqueKey(),
+                    direction: DismissDirection.down,
+                    background: Container(
+                      color: Colors.redAccent,
+                    ),
+                    onDismissed: (direction) {
+                      setState(() {
+                        timeStamps.removeAt(index);
+                      });
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Image(
+                            fit: BoxFit.cover,
+                            filterQuality: FilterQuality.low,
+                            image: CacheImageProvider(
+                              '${stamp.start}',
+                              Uint8List.view(stamp.startFrame!.buffer),
+                            ),
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Text('${stamp.start.label()} Segment ${index + 1}'),
-                      ),
-                      TextButton(
-                          onPressed: () => _player.seek(stamp.start),
-                          child: const Text('Seek to position')),
-                      TextButton(
-                          onPressed: () => introStart = stamp.start,
-                          child: const Text('Mark as intro start')),
-                      TextButton(
-                        onPressed: () => introEnd = stamp.start,
-                        child: const Text('Mark as intro stop'),
-                      ),
-                    ],
+                        Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Text('${stamp.start.label()} Segment ${index + 1}'),
+                        ),
+                        TextButton(
+                            onPressed: () => _player.seek(stamp.start),
+                            child: const Text('Seek to position')),
+                        TextButton(
+                            onPressed: () => introStart = stamp.start,
+                            child: const Text('Mark as intro start')),
+                        TextButton(
+                          onPressed: () => introEnd = stamp.start,
+                          child: const Text('Mark as intro stop'),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
-            itemCount: timeStamps.length,
-            onReorder: (oldIndex, newIndex) {
-              if (oldIndex < newIndex) {
-                newIndex -= 1;
-              }
-              setState(() {
-                final TimeStamp item = timeStamps.removeAt(oldIndex);
-                timeStamps.insert(newIndex, item);
-              });
-            },
-            scrollController: _timeLineScroll,
-            scrollDirection: Axis.horizontal,
-            shrinkWrap: true,
+                );
+              },
+              itemCount: timeStamps.length,
+              onReorder: (oldIndex, newIndex) {
+                if (oldIndex < newIndex) {
+                  newIndex -= 1;
+                }
+                setState(() {
+                  final TimeStamp item = timeStamps.removeAt(oldIndex);
+                  timeStamps.insert(newIndex, item);
+                });
+              },
+              scrollController: _timeLineScroll,
+
+              scrollDirection: Axis.horizontal,
+              shrinkWrap: true,
+            ),
           ),
         ),
       ),

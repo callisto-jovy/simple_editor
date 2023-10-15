@@ -93,6 +93,11 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+/// TODO: Switch out import / export for a project page
+/// Import project -> File picker dialog
+/// Create new project --> Project name & file-path
+/// With that: Different configs for the editor & the project!
+///
 class _MyHomePageState extends State<MyHomePage> {
   void _navigateRoute(final BuildContext context, final String path) {
     final WidgetBuilder pageBuilder;
@@ -126,7 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
     config.exportFile(file: file);
   }
 
-  void _loadFile() async {
+  void _loadFile(Function() callback) async {
     final FilePickerResult? result = await FilePicker.platform.pickFiles(
       dialogTitle: 'Import save file',
       allowMultiple: false,
@@ -134,6 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (result != null) {
       config.importFile(path: result.files[0].path);
+      callback.call();
     }
   }
 
@@ -189,7 +195,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: const Text('Export'),
               ),
               TextButton(
-                onPressed: () => _loadFile(),
+                onPressed: () => _loadFile(() => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(
+                        'Loaded config for ${path.basenameWithoutExtension(config.videoPath)}')))),
                 child: const Text('Import'),
               ),
               TextButton(
