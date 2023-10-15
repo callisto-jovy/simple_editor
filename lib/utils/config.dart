@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:jni/jni.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path/path.dart' as path;
 import 'package:video_editor/utils/model/filter_wrapper.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 
@@ -21,6 +22,8 @@ Future<void> ensureOutExists() async {
 
 /// The applications [JsonEncoder] with a specified indent of two.
 const JsonEncoder encoder = JsonEncoder.withIndent('  ');
+
+String projectName = 'placeholder';
 
 /// The [String] config audio path for the edit
 String audioPath = '';
@@ -56,6 +59,56 @@ final Map<String, FilterWrapper> filters = FlutterWrapper.getFilterValueMap()
         key.toDartString(releaseOriginal: true), value.toDartString(releaseOriginal: true)))
     .map((key, value) => MapEntry(key, FilterWrapper(key, value, false)));
 
+void fromJson(final Map<String, dynamic> json) {
+  // Handle old app versions
+  if (json['version'] == null) {
+    _handleLegacyJson(json);
+    return;
+  }
+
+  timeStamps.clear();
+
+  projectName = json['project_name'];
+  videoPath = json['source_video'];
+  audioPath = json['source_audio'];
+  peakThreshold = json['peak_threshold'];
+  msThreshold = json['ms_threshold'];
+  workingDirectory = Directory(json['working_path']);
+  //TODO: Output path
+  introStart = json['intro_start'] == -1 ? null : Duration(microseconds: json['intro_start']);
+  introEnd = json['intro_end'] == -1 ? null : Duration(microseconds: json['intro_end']);
+
+  json['time_stamps'].forEach((v) => timeStamps.add(TimeStamp.fromJson(v)));
+
+  json['editing_flags'].forEach((key, value) => editingOptions[key] = value);
+  json['filters'].forEach((v) => filters[v['name']] = FilterWrapper.fromJson(v)); //TODO: Don't replace, reconfigure.
+}
+
+Future<String> applicationState() async {
+  final PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+  final json = {
+    'version': packageInfo.version,
+    'project_name': projectName, //TODO: project name, save path, etc.
+    'source_video': videoPath, // With these parameters, we need a main page.
+    'source_audio': audioPath,
+    'peak_threshold': peakThreshold,
+    'ms_threshold': msThreshold,
+    'working_path': workingDirectory.path, // TODO: Setting for path, maybe a config.
+    'output_path': '${path.basenameWithoutExtension(videoPath)}.mp4', //TODO: Request for filename
+    'intro_start': introStart == null ? -1 : introStart!.inMicroseconds,
+    'intro_end': introEnd == null ? -1 : introEnd!.inMicroseconds,
+    'time_stamps': timeStamps,
+    'editing_flags': editingOptions,
+    'filters': filters.values.toList(),
+  };
+
+  return encoder.convert(json);
+}
+
+/// TODO: this is the json for the backend.
+/// New json for the editor state.
+///
 /// Creates a JSON [String] with all the app's state.
 String toJson() {
   final JList<JDouble> beatTimes =
@@ -67,7 +120,7 @@ String toJson() {
     'peak_threshold': peakThreshold,
     'ms_threshold': msThreshold,
     'working_path': workingDirectory.path, //TODO: Setting for path
-    'output_path': 'edit_out.mp4', //TODO: Request for filename
+    'output_path': '${path.basenameWithoutExtension(videoPath)}.mp4', //TODO: Request for filename
     'editor_state': {
       'intro_start': introStart == null ? -1 : introStart!.inMicroseconds,
       'intro_end': introEnd == null ? -1 : introEnd!.inMicroseconds,
@@ -79,19 +132,16 @@ String toJson() {
           .map((e) => {'name': e.key, 'value': e.value.value})
           .toList(),
     },
-    'thumbnails': timeStamps
-        .map(
-            (e) => e.startFrame == null ? null : base64Encode(Uint8List.view(e.startFrame!.buffer)))
-        .toList()
   };
 
   return encoder.convert(json);
 }
 
-void exportFile({File? file}) {
-  file ??= File('saved_state.json');
+void exportFile({File? file}) async {
+  file ??= File('$projectName.json');
 
-  file.writeAsString(toJson());
+  final String appState = await applicationState();
+  file.writeAsString(appState);
 }
 
 void importFile({String? path}) {
@@ -102,6 +152,10 @@ void importFile({String? path}) {
   final File file = File(path);
   dynamic json = jsonDecode(file.readAsStringSync());
 
+  fromJson(json);
+}
+
+void _handleLegacyJson(final Map<String, dynamic> json) {
   peakThreshold = json['peak_threshold'];
   msThreshold = json['ms_threshold'];
   videoPath = json['source_video'];
