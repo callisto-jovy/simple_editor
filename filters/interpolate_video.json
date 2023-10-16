@@ -1,0 +1,14 @@
+{
+  "name": "interpolate_video_frames",
+  "display_name": "Interpolate frames",
+  "description": "Uses interpolation to create an motion blur effect & increase the framerate by predicting what frames between might look like.",
+  "type": "TRANSITION",
+  "command": "minterpolate=fps=$fps$,tblend=all_mode=average,setpts=%d*PTS",
+  "settings": [
+    {
+      "name": "fps",
+      "default": "120",
+      "type": "VALUE"
+    }
+  ]
+}

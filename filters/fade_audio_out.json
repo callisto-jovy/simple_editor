@@ -1,0 +1,20 @@
+{
+  "name": "fade_audio_out",
+  "display_name": "Fade audio out",
+  "description": "Fades out the audio at the end of the edit.",
+  "type": "AUDIO",
+  "command": "afade=t=out:st=$fadeStart$:d=$fadeDuration$",
+  "settings": [
+    {
+      "name": "fadeStart",
+      "type": "VARIABLE",
+      "mapped": "edit_time_s",
+      "offset": "-5"
+    },
+    {
+      "name": "fadeDuration",
+      "default": "4",
+      "type": "VALUE"
+    }
+  ]
+}

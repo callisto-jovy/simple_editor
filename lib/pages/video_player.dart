@@ -12,6 +12,7 @@ import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/widgets/custom_video_controls.dart' as custom_controls;
 
 import '../widgets/cache_image_provider.dart';
+import 'main_project_page.dart';
 
 class VideoPlayer extends StatefulWidget {
   const VideoPlayer({super.key});
@@ -72,6 +73,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
     _scrollController.dispose();
     _timeLineScroll.dispose();
     super.dispose();
+
   }
 
   Widget _buildVideo(BuildContext context) {
@@ -156,12 +158,6 @@ class _VideoPlayerState extends State<VideoPlayer> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildAudioTimes(BuildContext context) {
-    return ListView(
-      shrinkWrap: true,
     );
   }
 

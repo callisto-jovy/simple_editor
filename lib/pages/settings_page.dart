@@ -53,11 +53,11 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           SettingsSection(
             title: const Text('Filters'),
-            tiles: config.videoProject.config.filters.entries.map((e) {
+            tiles: config.videoProject.config.filters.map((e) {
               return SettingsTile.navigation(
-                onPressed: (context) => toFilterPage(context, e.value),
+                onPressed: (context) => toFilterPage(context, e),
                 leading: const Icon(Icons.filter),
-                title: Text(e.key),
+                title: Text(e.name),
               );
             }).toList(),
           )

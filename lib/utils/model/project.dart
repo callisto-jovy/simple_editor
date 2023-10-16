@@ -5,18 +5,22 @@ import 'package:video_editor/utils/model/project_config.dart';
 
 class VideoProject {
   /// The applications output directory. The segments are exported there (& optionally edited together)
-  Directory workingDirectory = Directory('editor_out')..createSync();
+  Directory workingDirectory = Directory('editor_out');
 
   String projectName;
   String _projectPath = '';
   final ProjectConfig config;
 
-  VideoProject(this._projectPath, {required this.projectName, required this.config});
+  VideoProject(this._projectPath, {required this.projectName, required this.config}) {
+    workingDirectory = Directory(path.join(_projectPath, 'editor_out'));
+  }
 
   VideoProject.fromJson(final Map<String, dynamic> json)
       : projectName = json['project_name'],
         _projectPath = json['project_path'],
-        config = ProjectConfig.fromJson(json['config']);
+        config = ProjectConfig.fromJson(json['config']) {
+    workingDirectory = Directory(path.join(_projectPath, 'editor_out'));
+  }
 
   Map<String, dynamic> toJson(final String version) => {
         'version': version,

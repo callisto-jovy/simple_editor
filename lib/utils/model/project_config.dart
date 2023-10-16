@@ -1,7 +1,7 @@
 import 'package:jni/jni.dart';
 import 'package:path/path.dart' as path;
 import 'package:video_editor/utils/config.dart' as config;
-import 'package:video_editor/utils/easy_edits_backend.dart';
+import 'package:video_editor/utils/easy_edits_backend.dart' as backend;
 import 'package:video_editor/utils/model/filter_wrapper.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 
@@ -30,17 +30,17 @@ class ProjectConfig {
     'WRITE_HDR_OPTIONS': true,
     'BEST_QUALITY': true,
     'SHUFFLE_SEQUENCES': false,
+    'PRINT_DEBUG': true,
   };
+
+  ProjectConfig();
 
   /// [Map] with all the backend's filters. Key: [String] (filter's name). Value [FilterWrapper]
   /// helper class to store the filter's value & whether it should be enabled.
   /// Makes a call to the backend through JNI and maps the result.
-  final Map<String, FilterWrapper> filters = FlutterWrapper.getFilterValueMap()
-      .map((key, value) => MapEntry(
-          key.toDartString(releaseOriginal: true), value.toDartString(releaseOriginal: true)))
-      .map((key, value) => MapEntry(key, FilterWrapper(key, value, false)));
-
-  ProjectConfig();
+  final List<FilterWrapper> filters = backend.FlutterWrapper.getFilters()
+      .map((element) => FilterWrapper.fromBackend(element))
+      .toList();
 
   ProjectConfig.fromJson(final Map<String, dynamic> json) {
     timeStamps.clear();
@@ -53,7 +53,14 @@ class ProjectConfig {
     introEnd = json['intro_end'] == -1 ? null : Duration(microseconds: json['intro_end']);
     json['time_stamps'].forEach((v) => timeStamps.add(TimeStamp.fromJson(v)));
     json['editing_flags'].forEach((key, value) => editingOptions[key] = value);
-    json['filters'].forEach((v) => filters[v['name']] = FilterWrapper.fromJson(v));
+    json['filters']
+        .forEach((v) => filters.where((element) => element.name == v['name']).forEach((element) {
+              final Map<String, String> values = {};
+              v['values'].forEach((k, v) => values[k] = v);
+
+              element.values = values;
+              element.enabled = v['enabled'];
+            })); //TODO: update, dont override
   }
 
   Map<String, dynamic> toJson() => {
@@ -65,12 +72,12 @@ class ProjectConfig {
         'intro_end': introEnd == null ? -1 : introEnd!.inMicroseconds,
         'time_stamps': timeStamps,
         'editing_flags': editingOptions,
-        'filters': filters.values.toList(),
+        'filters': filters.toList(),
       };
 
   Map<String, dynamic> editorConfig() {
-    final JList<JDouble> beatTimes =
-        AudioAnalyser.analyseBeats(JString.fromString(audioPath), peakThreshold, msThreshold);
+    final JList<JDouble> beatTimes = backend.AudioAnalyser.analyseBeats(
+        JString.fromString(audioPath), peakThreshold, msThreshold);
 
     return {
       'source_video': videoPath,
@@ -78,8 +85,7 @@ class ProjectConfig {
       'peak_threshold': peakThreshold,
       'ms_threshold': msThreshold,
       'working_path': config.videoProject.workingDirectory.path,
-      'output_path': path.join(config.videoProject.workingDirectory.path,
-          '${path.basenameWithoutExtension(videoPath)}.mp4'),
+      'output_path': '${path.basenameWithoutExtension(videoPath)}.mp4',
       //TODO: Request for filename
       'editor_state': {
         'intro_start': introStart == null ? -1 : introStart!.inMicroseconds,
@@ -87,9 +93,9 @@ class ProjectConfig {
         'time_stamps': timeStamps.map((e) => e.start.inMicroseconds).toList(),
         'beat_times': beatTimes.map((e) => e.doubleValue(releaseOriginal: true)).toList(),
         'editing_flags': editingOptions,
-        'filters': filters.entries
-            .where((element) => element.value.enabled == true)
-            .map((e) => {'name': e.key, 'value': e.value.value})
+        'filters': filters
+            .where((element) => element.enabled == true)
+            .map((e) => {'name': e.name, 'values': e.values})
             .toList(),
       },
     };

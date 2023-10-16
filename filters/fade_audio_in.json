@@ -1,0 +1,14 @@
+{
+  "name": "fade_audio_in",
+  "display_name": "Fade in audio",
+  "description": "Fade in the audio of the edit for a certain amount of time.",
+  "type": "AUDIO",
+  "command": "afade=t=in:d=$fadeDuration$",
+  "settings": [
+    {
+      "name": "fadeDuration",
+      "default": "4",
+      "type": "VALUE"
+    }
+  ]
+}

@@ -25,6 +25,8 @@ source_path:
 classes:
   - 'de.yugata.easy.edits.audio.AudioAnalyser'
   - 'de.yugata.easy.edits.editor.FlutterWrapper'
+  - 'de.yugata.easy.edits.editor.filter.FilterWrapper'
+  - 'de.yugata.easy.edits.editor.filter.FilterValue'
 
 
 maven_downloads:
