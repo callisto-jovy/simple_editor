@@ -3,6 +3,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:video_editor/widgets/styles.dart';
 
 class MediaFileDrop extends StatefulWidget {
   final String fileType;
@@ -68,13 +69,7 @@ class _MediaFileDropState extends State<MediaFileDrop> {
                 ),
                 const Padding(padding: EdgeInsets.all(10)),
                 TextButton(
-                  style: TextButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-                    padding: const EdgeInsets.all(15),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
+                  style: textButtonStyle(context),
                   onPressed: () => _filePickerDialoge(),
                   child: const Text('Browse...'),
                 ),

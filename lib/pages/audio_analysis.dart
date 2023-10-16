@@ -25,7 +25,7 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
   final List<double> timeStamps = [];
 
   Future<void> parseData() async {
-    final Wav wav = await Wav.readFile(config.audioPath);
+    final Wav wav = await Wav.readFile(config.videoProject.config.audioPath);
 
     lengthInMillis = ((wav.toMono().length / wav.samplesPerSecond) * 1000).round();
 
@@ -39,7 +39,7 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
 
   Future<void> executeTimeStamps() async {
     final JList<JDouble> doubles = AudioAnalyser.analyseStamps(
-        JString.fromString(config.audioPath), config.peakThreshold, config.msThreshold);
+        JString.fromString(config.videoProject.config.audioPath), config.videoProject.config.peakThreshold, config.videoProject.config.msThreshold);
 
     setState(() {
       timeStamps.clear();
@@ -61,13 +61,13 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(path.basename(config.audioPath)),
+        title: Text(path.basename(config.videoProject.config.audioPath)),
       ),
       body: Column(
         children: [
           Text('Total cuts: ${timeStamps.length}'),
           FlexibleSlider(
-            onValueChanged: (p0) => config.peakThreshold = p0,
+            onValueChanged: (p0) => config.videoProject.config.peakThreshold = p0,
             max: 1,
             divisions: 100,
             fractionDigits: 4,
@@ -79,7 +79,7 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
             ),
           ),
           FlexibleSlider(
-            onValueChanged: (p0) => config.msThreshold = p0,
+            onValueChanged: (p0) => config.videoProject.config.msThreshold = p0,
             max: 2000,
             divisions: 100,
             fractionDigits: 4,

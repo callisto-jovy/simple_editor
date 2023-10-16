@@ -24,11 +24,12 @@ class VideoPlayer extends StatefulWidget {
 class _VideoPlayerState extends State<VideoPlayer> {
   /// Create a [Player] to control playback.
   final _player = Player(
-      configuration: const PlayerConfiguration(
-    title: 'Easy Edits',
-    bufferSize: 1024 * 1024 * 1024,
-    libass: true,
-  ));
+    configuration: const PlayerConfiguration(
+      title: 'Easy Edits',
+      bufferSize: 1024 * 1024 * 1024,
+      libass: true,
+    ),
+  );
 
   /// Create a [VideoController] to handle video output from [Player].
   late final _controller = VideoController(_player);
@@ -40,9 +41,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
   Duration? introStart, introEnd;
 
   Future<void> _loadTimeStamps() async {
-    for (final TimeStamp stamp in config.timeStamps) {
-
-
+    for (final TimeStamp stamp in config.videoProject.config.timeStamps) {
       if (stamp.startFrame == null) {
         await _player.seek(stamp.start);
         final Uint8List? frame = await _player.screenshot();
@@ -60,20 +59,18 @@ class _VideoPlayerState extends State<VideoPlayer> {
   @override
   void initState() {
     // Open the media in a new microtask
-    Future.microtask(() async {
-      await _player.open(Media(config.videoPath));
-      _loadTimeStamps();
-    });
+    _player.open(Media(config.videoProject.config.videoPath)).then((value) => _loadTimeStamps());
 
     super.initState();
   }
 
   @override
   void dispose() {
-    config.timeStamps.clear();
-    config.timeStamps.addAll(timeStamps);
+    config.videoProject.config.timeStamps.clear();
+    config.videoProject.config.timeStamps.addAll(timeStamps);
     _player.dispose();
     _scrollController.dispose();
+    _timeLineScroll.dispose();
     super.dispose();
   }
 
@@ -257,7 +254,6 @@ class _VideoPlayerState extends State<VideoPlayer> {
                 });
               },
               scrollController: _timeLineScroll,
-
               scrollDirection: Axis.horizontal,
               shrinkWrap: true,
             ),
