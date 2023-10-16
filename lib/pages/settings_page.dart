@@ -14,10 +14,11 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   void toFilterPage(BuildContext context, final FilterWrapper wrapper) {
     Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => FilterPage(wrapper: wrapper),
-        ));
+      context,
+      MaterialPageRoute(
+        builder: (context) => FilterPage(wrapper: wrapper),
+      ),
+    );
   }
 
   @override
@@ -31,14 +32,14 @@ class _SettingsPageState extends State<SettingsPage> {
         sections: [
           SettingsSection(
             title: const Text('Flags'),
-            tiles: config.editingOptions
+            tiles: config.videoProject.config.editingOptions
                 .map(
                   (key, value) => MapEntry(
                     key,
                     SettingsTile.switchTile(
                       onToggle: (value) {
                         setState(() {
-                          config.editingOptions[key] = value;
+                          config.videoProject.config.editingOptions[key] = value;
                         });
                       },
                       initialValue: value,
@@ -52,7 +53,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           SettingsSection(
             title: const Text('Filters'),
-            tiles: config.filters.entries.map((e) {
+            tiles: config.videoProject.config.filters.entries.map((e) {
               return SettingsTile.navigation(
                 onPressed: (context) => toFilterPage(context, e.value),
                 leading: const Icon(Icons.filter),

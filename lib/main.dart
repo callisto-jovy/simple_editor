@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -7,15 +6,10 @@ import 'package:jni/jni.dart';
 import 'package:local_notifier/local_notifier.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:path/path.dart';
-import 'package:path/path.dart' as path;
-import 'package:video_editor/pages/audio_analysis.dart';
-import 'package:video_editor/pages/error_page.dart';
-import 'package:video_editor/pages/settings_page.dart';
-import 'package:video_editor/pages/video_player.dart';
+import 'package:video_editor/pages/create_project_page.dart';
+import 'package:video_editor/pages/main_project_page.dart';
 import 'package:video_editor/utils/config.dart' as config;
-import 'package:video_editor/utils/easy_edits_backend.dart';
-import 'package:video_editor/utils/file_util.dart' as file_util;
-import 'package:video_editor/widgets/file_drop.dart';
+import 'package:video_editor/widgets/styles.dart';
 
 const jarError = 'No JAR files were found.\n'
     'Run `dart run jnigen:download_maven_jars --config jnigen.yaml` '
@@ -93,45 +87,24 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-/// TODO: Switch out import / export for a project page
-/// Import project -> File picker dialog
-/// Create new project --> Project name & file-path
-/// With that: Different configs for the editor & the project!
-///
 class _MyHomePageState extends State<MyHomePage> {
-  void _navigateRoute(final BuildContext context, final String path) {
-    final WidgetBuilder pageBuilder;
-
-    if (file_util.isFileAudio(path)) {
-      config.audioPath = path;
-      pageBuilder = (context) => const AudioAnalysis();
-    } else if (file_util.isFileVideo(path)) {
-      config.videoPath = path;
-
-      pageBuilder = (context) => const VideoPlayer();
-    } else {
-      pageBuilder = (context) => const ErrorPage(
-          errorMessage: 'Wrong file-format. Please make sure that the supplied file compatible.',
-          subtext: 'Compatible file formats: Video: HEVC, Audio: WAV.');
-    }
-
+  void _navigatePage(final BuildContext context, final WidgetBuilder page) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: pageBuilder),
+      MaterialPageRoute(
+        builder: page,
+      ),
     );
   }
 
-  void _saveFile() async {
-    final String? result = await FilePicker.platform.saveFile(
-      allowedExtensions: ['json'],
-      dialogTitle: 'Export data',
-      fileName: '${path.basename(config.videoPath)}.json',
-    );
-    final File? file = result == null ? null : File(result);
-    config.exportFile(file: file);
+  void _navigateWOBack(final BuildContext context) {
+    Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const MainProjectPage(), maintainState: true),
+        (Route<dynamic> route) => false);
   }
 
-  void _loadFile(Function() callback) async {
+  void _importProject(Function() importDone) async {
     final FilePickerResult? result = await FilePicker.platform.pickFiles(
       dialogTitle: 'Import save file',
       allowMultiple: false,
@@ -139,88 +112,47 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (result != null) {
       config.importFile(path: result.files[0].path);
-      callback.call();
+      importDone.call();
     }
-  }
-
-  Future<void> _edit() async {
-    await config.ensureOutExists();
-    //TODO: Make sure that the state is fulfilled.
-    final String json = config.toJson();
-    // Run the export process in a new isolate
-    await Isolate.run(() => FlutterWrapper.edit(JString.fromString(json))).then((value) {
-      LocalNotification(
-        title: 'Easy Edits',
-        body: 'Done editing.',
-      ).show();
-    });
-  }
-
-  Future<void> _exportSegments() async {
-    await config.ensureOutExists();
-    //TODO: Make sure that the state is fulfilled.
-    final String json = config.toJson();
-    // Run the export process in a new isolate
-    await Isolate.run(() => FlutterWrapper.exportSegments(JString.fromString(json))).then((value) {
-      LocalNotification(
-        title: 'Easy Edits',
-        body: 'Done exporting the segments.',
-      ).show();
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [
-          Row(
-            children: [
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsPage(),
-                    ),
-                  );
-                },
-                child: const Text('Settings'),
-              ),
-              TextButton(
-                onPressed: () => _saveFile(),
-                child: const Text('Export'),
-              ),
-              TextButton(
-                onPressed: () => _loadFile(() => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(
-                        'Loaded config for ${path.basenameWithoutExtension(config.videoPath)}')))),
-                child: const Text('Import'),
-              ),
-              TextButton(
-                onPressed: () => _edit(),
-                child: const Text('Edit'),
-              ),
-              TextButton(
-                onPressed: () => _exportSegments(),
-                child: const Text('Export Segments'),
-              )
-            ],
-          ),
-        ],
         centerTitle: true,
         title: Text(widget.title),
       ),
       body: Center(
         child: SizedBox(
-          width: size.width - 50,
-          height: size.height - 100,
-          child: MediaFileDrop(
-            fileType: 'Video or Audio',
-            fileDropped: (file) => _navigateRoute(context, file.path),
+          width: 400,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Welcome back',
+                style: Theme.of(context).textTheme.headlineLarge,
+              ),
+              TextButton(
+                onPressed: () => _navigatePage(context, (context) => const CreateProjectPage()),
+                style: textButtonStyle(context),
+                child: const Text('New Project'),
+              ),
+              TextButton(
+                onPressed: () => _importProject(() => _navigateWOBack(context)),
+                style: textButtonStyle(context),
+                child: const Text('Import'),
+              )
+            ]
+                .map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: e,
+                  ),
+                )
+                .toList(),
           ),
         ),
       ),

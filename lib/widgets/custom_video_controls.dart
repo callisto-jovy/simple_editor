@@ -931,17 +931,16 @@ class CustomMaterialDesktopSeekBarState extends State<CustomMaterialDesktopSeekB
       {required final BoxConstraints constraints,
       required final Duration stamp,
       Color? color = Colors.green}) {
-
-    return Container(
-      color: color,
-      width: 3,
-      transform: Transform.translate(
-        offset: Offset(
-            stamp.inMilliseconds *
-                (constraints.maxWidth - _theme(context).seekBarThumbSize / 2) /
-                duration.inMilliseconds,
-            0),
-      ).transform,
+    return Transform.translate(
+      offset: Offset(
+          stamp.inMilliseconds *
+              (constraints.maxWidth - _theme(context).seekBarThumbSize / 2) /
+              duration.inMilliseconds,
+          0),
+      child: Container(
+        color: color,
+        width: 3,
+      ),
     );
   }
 
@@ -995,7 +994,6 @@ class CustomMaterialDesktopSeekBarState extends State<CustomMaterialDesktopSeekB
                         ),
                         ...widget.timeStamps
                             .map((e) => timeStampContainer(stamp: e, constraints: constraints)),
-
                         if (widget.introStart != null)
                           timeStampContainer(
                               constraints: constraints,
