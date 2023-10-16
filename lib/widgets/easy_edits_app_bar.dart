@@ -1,11 +1,9 @@
-import 'dart:io';
 import 'dart:isolate';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:jni/jni.dart';
 import 'package:local_notifier/local_notifier.dart';
-import 'package:path/path.dart' as path;
 import 'package:video_editor/pages/main_project_page.dart';
 import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/utils/config.dart' as config;

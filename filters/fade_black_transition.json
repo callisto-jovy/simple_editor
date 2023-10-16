@@ -1,0 +1,14 @@
+{
+  "name": "fade_black_transition",
+  "display_name": "Fade to black transition",
+  "description": "Fades in from black after every cut. The time to fade in is in milliseconds.",
+  "type": "VIDEO",
+  "command": "fade=t=in:st=0:d=$fadeIn$ms",
+  "settings": [
+    {
+      "name": "fadeIn",
+      "default": "120",
+      "type": "VALUE"
+    }
+  ]
+}

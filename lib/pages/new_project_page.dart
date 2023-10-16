@@ -1,20 +1,12 @@
-import 'dart:io';
-import 'dart:isolate';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:jni/jni.dart';
-import 'package:local_notifier/local_notifier.dart';
-import 'package:path/path.dart' as path;
 import 'package:video_editor/pages/audio_analysis.dart';
 import 'package:video_editor/pages/error_page.dart';
-import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/pages/video_player.dart';
 import 'package:video_editor/utils/config.dart' as config;
-import 'package:video_editor/utils/easy_edits_backend.dart';
 import 'package:video_editor/utils/file_util.dart' as file_util;
 import 'package:video_editor/widgets/easy_edits_app_bar.dart';
 import 'package:video_editor/widgets/file_drop.dart';
+
 
 class NewProjectPage extends StatefulWidget {
   const NewProjectPage({super.key});
@@ -44,6 +36,11 @@ class _NewProjectPageState extends State<NewProjectPage> {
       context,
       MaterialPageRoute(builder: pageBuilder),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override

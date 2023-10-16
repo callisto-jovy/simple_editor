@@ -1,0 +1,30 @@
+{
+  "name": "fade_video_out",
+  "display_name": "Fade video out to black",
+  "description": "Fades the edit to black at the end and displays a watermark.",
+  "type": "VIDEO",
+  "command": "fade=t=out:st=$fadeStart$:d=$fadeDuration$, drawtext=fontcolor=white:enable='between(t,$fadeStart$,$fadeEnd$):fontsize=128:fontfile='$font$':text=yugata:x=(w-text_w)/2:y=(h-text_h)/2",
+  "settings": [
+    {
+      "name": "fadeStart",
+      "type": "VARIABLE",
+      "mapped": "edit_time_s",
+      "offset": "-5"
+    },
+    {
+      "name": "fadeDuration",
+      "default": "4",
+      "type": "VALUE"
+    },
+    {
+      "name": "fadeEnd",
+      "type": "VARIABLE",
+      "mapped": "edit_time_s"
+    },
+    {
+      "name": "font",
+      "type": "VARIABLE",
+      "mapped": "font_file"
+    }
+  ]
+}

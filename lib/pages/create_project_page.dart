@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:video_editor/pages/main_project_page.dart';
 import 'package:video_editor/pages/new_project_page.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/model/project.dart';
@@ -45,7 +46,7 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
 
       Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const NewProjectPage(), maintainState: true),
+          MaterialPageRoute(builder: (context) => const MainProjectPage(), maintainState: true),
           (Route<dynamic> route) => false);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('Project name or path is empty.'));

@@ -39,6 +39,11 @@ class _MainProjectPageState extends State<MainProjectPage> {
     _projectNameController.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+  }
+
   /// Pushes the video player page
   void _navigateToVideo(final BuildContext context) {
     Navigator.push(
