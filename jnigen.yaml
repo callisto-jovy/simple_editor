@@ -23,10 +23,10 @@ source_path:
   - 'easy_edits/core/src/main/java/'
 
 classes:
-  - 'de.yugata.easy.edits.audio.AudioAnalyser'
-  - 'de.yugata.easy.edits.editor.FlutterWrapper'
-  - 'de.yugata.easy.edits.editor.filter.FilterWrapper'
-  - 'de.yugata.easy.edits.editor.filter.FilterValue'
+  - 'de.yugata.easy.edits.audio.AudioAnalyser' # audio analysis
+  - 'de.yugata.easy.edits.editor.FlutterWrapper' # wrapper for the most used tasks, e.g. export segments, get filters, edit
+  - 'de.yugata.easy.edits.editor.filter.FilterValue' # needed for the filter wrapper
+  - 'de.yugata.easy.edits.editor.filter.FilterType' # needed for the filter wrapper
 
 
 maven_downloads:

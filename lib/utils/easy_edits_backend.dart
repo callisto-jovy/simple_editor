@@ -131,6 +131,170 @@ final class $AudioAnalyserType extends jni.JObjType<AudioAnalyser> {
   }
 }
 
+/// from: de.yugata.easy.edits.editor.FlutterWrapper$FlutterFilterWrapper
+class FlutterWrapper_FlutterFilterWrapper extends jni.JObject {
+  @override
+  late final jni.JObjType<FlutterWrapper_FlutterFilterWrapper> $type = type;
+
+  FlutterWrapper_FlutterFilterWrapper.fromRef(
+    jni.JObjectPtr ref,
+  ) : super.fromRef(ref);
+
+  /// The type which includes information such as the signature of this class.
+  static const type = $FlutterWrapper_FlutterFilterWrapperType();
+  static final _new0 = jniLookup<
+              ffi.NativeFunction<
+                  jni.JniResult Function(
+                      ffi.Pointer<ffi.Void>,
+                      ffi.Pointer<ffi.Void>,
+                      ffi.Pointer<ffi.Void>,
+                      ffi.Pointer<ffi.Void>,
+                      ffi.Pointer<ffi.Void>,
+                      ffi.Pointer<ffi.Void>)>>(
+          "FlutterWrapper_FlutterFilterWrapper__new0")
+      .asFunction<
+          jni.JniResult Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>)>();
+
+  /// from: public void <init>(java.lang.String string, java.lang.String string1, java.lang.String string2, java.lang.String string3, de.yugata.easy.edits.editor.filter.FilterType filterType, java.util.List list)
+  /// The returned object must be released after use, by calling the [release] method.
+  factory FlutterWrapper_FlutterFilterWrapper(
+    jni.JString string,
+    jni.JString string1,
+    jni.JString string2,
+    jni.JString string3,
+    FilterType filterType,
+    jni.JList<FilterValue> list,
+  ) {
+    return FlutterWrapper_FlutterFilterWrapper.fromRef(_new0(
+            string.reference,
+            string1.reference,
+            string2.reference,
+            string3.reference,
+            filterType.reference,
+            list.reference)
+        .object);
+  }
+
+  static final _getHelpText = jniLookup<
+              ffi
+              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
+          "FlutterWrapper_FlutterFilterWrapper__getHelpText")
+      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
+
+  /// from: public java.lang.String getHelpText()
+  /// The returned object must be released after use, by calling the [release] method.
+  jni.JString getHelpText() {
+    return const jni.JStringType().fromRef(_getHelpText(reference).object);
+  }
+
+  static final _getName = jniLookup<
+              ffi
+              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
+          "FlutterWrapper_FlutterFilterWrapper__getName")
+      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
+
+  /// from: public java.lang.String getName()
+  /// The returned object must be released after use, by calling the [release] method.
+  jni.JString getName() {
+    return const jni.JStringType().fromRef(_getName(reference).object);
+  }
+
+  static final _getDisplayName = jniLookup<
+              ffi
+              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
+          "FlutterWrapper_FlutterFilterWrapper__getDisplayName")
+      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
+
+  /// from: public java.lang.String getDisplayName()
+  /// The returned object must be released after use, by calling the [release] method.
+  jni.JString getDisplayName() {
+    return const jni.JStringType().fromRef(_getDisplayName(reference).object);
+  }
+
+  static final _getDescription = jniLookup<
+              ffi
+              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
+          "FlutterWrapper_FlutterFilterWrapper__getDescription")
+      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
+
+  /// from: public java.lang.String getDescription()
+  /// The returned object must be released after use, by calling the [release] method.
+  jni.JString getDescription() {
+    return const jni.JStringType().fromRef(_getDescription(reference).object);
+  }
+
+  static final _getFilterType = jniLookup<
+              ffi
+              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
+          "FlutterWrapper_FlutterFilterWrapper__getFilterType")
+      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
+
+  /// from: public de.yugata.easy.edits.editor.filter.FilterType getFilterType()
+  /// The returned object must be released after use, by calling the [release] method.
+  FilterType getFilterType() {
+    return const $FilterTypeType().fromRef(_getFilterType(reference).object);
+  }
+
+  static final _getValues = jniLookup<
+              ffi
+              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
+          "FlutterWrapper_FlutterFilterWrapper__getValues")
+      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
+
+  /// from: public java.util.List getValues()
+  /// The returned object must be released after use, by calling the [release] method.
+  jni.JList<FilterValue> getValues() {
+    return const jni.JListType($FilterValueType())
+        .fromRef(_getValues(reference).object);
+  }
+
+  static final _toString1 = jniLookup<
+              ffi
+              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
+          "FlutterWrapper_FlutterFilterWrapper__toString1")
+      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
+
+  /// from: public java.lang.String toString()
+  /// The returned object must be released after use, by calling the [release] method.
+  jni.JString toString1() {
+    return const jni.JStringType().fromRef(_toString1(reference).object);
+  }
+}
+
+final class $FlutterWrapper_FlutterFilterWrapperType
+    extends jni.JObjType<FlutterWrapper_FlutterFilterWrapper> {
+  const $FlutterWrapper_FlutterFilterWrapperType();
+
+  @override
+  String get signature =>
+      r"Lde/yugata/easy/edits/editor/FlutterWrapper$FlutterFilterWrapper;";
+
+  @override
+  FlutterWrapper_FlutterFilterWrapper fromRef(jni.JObjectPtr ref) =>
+      FlutterWrapper_FlutterFilterWrapper.fromRef(ref);
+
+  @override
+  jni.JObjType get superType => const jni.JObjectType();
+
+  @override
+  final superCount = 1;
+
+  @override
+  int get hashCode => ($FlutterWrapper_FlutterFilterWrapperType).hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    return other.runtimeType == ($FlutterWrapper_FlutterFilterWrapperType) &&
+        other is $FlutterWrapper_FlutterFilterWrapperType;
+  }
+}
+
 /// from: de.yugata.easy.edits.editor.FlutterWrapper
 class FlutterWrapper extends jni.JObject {
   @override
@@ -159,8 +323,8 @@ class FlutterWrapper extends jni.JObject {
 
   /// from: static public java.util.List getFilters()
   /// The returned object must be released after use, by calling the [release] method.
-  static jni.JList<FilterWrapper> getFilters() {
-    return const jni.JListType($FilterWrapperType())
+  static jni.JList<FlutterWrapper_FlutterFilterWrapper> getFilters() {
+    return const jni.JListType($FlutterWrapper_FlutterFilterWrapperType())
         .fromRef(_getFilters().object);
   }
 
@@ -213,101 +377,6 @@ final class $FlutterWrapperType extends jni.JObjType<FlutterWrapper> {
   bool operator ==(Object other) {
     return other.runtimeType == ($FlutterWrapperType) &&
         other is $FlutterWrapperType;
-  }
-}
-
-/// from: de.yugata.easy.edits.editor.filter.FilterWrapper
-class FilterWrapper extends jni.JObject {
-  @override
-  late final jni.JObjType<FilterWrapper> $type = type;
-
-  FilterWrapper.fromRef(
-    jni.JObjectPtr ref,
-  ) : super.fromRef(ref);
-
-  /// The type which includes information such as the signature of this class.
-  static const type = $FilterWrapperType();
-  static final _new0 = jniLookup<
-          ffi.NativeFunction<
-              jni.JniResult Function(
-                  ffi.Pointer<ffi.Void>,
-                  ffi.Pointer<ffi.Void>,
-                  ffi.Pointer<ffi.Void>)>>("FilterWrapper__new0")
-      .asFunction<
-          jni.JniResult Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>,
-              ffi.Pointer<ffi.Void>)>();
-
-  /// from: public void <init>(java.lang.String string, java.lang.String string1, java.util.List list)
-  /// The returned object must be released after use, by calling the [release] method.
-  factory FilterWrapper(
-    jni.JString string,
-    jni.JString string1,
-    jni.JList<FilterValue> list,
-  ) {
-    return FilterWrapper.fromRef(
-        _new0(string.reference, string1.reference, list.reference).object);
-  }
-
-  static final _getName = jniLookup<
-              ffi
-              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
-          "FilterWrapper__getName")
-      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
-
-  /// from: public java.lang.String getName()
-  /// The returned object must be released after use, by calling the [release] method.
-  jni.JString getName() {
-    return const jni.JStringType().fromRef(_getName(reference).object);
-  }
-
-  static final _getDescription = jniLookup<
-              ffi
-              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
-          "FilterWrapper__getDescription")
-      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
-
-  /// from: public java.lang.String getDescription()
-  /// The returned object must be released after use, by calling the [release] method.
-  jni.JString getDescription() {
-    return const jni.JStringType().fromRef(_getDescription(reference).object);
-  }
-
-  static final _getValues = jniLookup<
-              ffi
-              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
-          "FilterWrapper__getValues")
-      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
-
-  /// from: public java.util.List getValues()
-  /// The returned object must be released after use, by calling the [release] method.
-  jni.JList<FilterValue> getValues() {
-    return const jni.JListType($FilterValueType())
-        .fromRef(_getValues(reference).object);
-  }
-}
-
-final class $FilterWrapperType extends jni.JObjType<FilterWrapper> {
-  const $FilterWrapperType();
-
-  @override
-  String get signature => r"Lde/yugata/easy/edits/editor/filter/FilterWrapper;";
-
-  @override
-  FilterWrapper fromRef(jni.JObjectPtr ref) => FilterWrapper.fromRef(ref);
-
-  @override
-  jni.JObjType get superType => const jni.JObjectType();
-
-  @override
-  final superCount = 1;
-
-  @override
-  int get hashCode => ($FilterWrapperType).hashCode;
-
-  @override
-  bool operator ==(Object other) {
-    return other.runtimeType == ($FilterWrapperType) &&
-        other is $FilterWrapperType;
   }
 }
 
@@ -386,5 +455,96 @@ final class $FilterValueType extends jni.JObjType<FilterValue> {
   @override
   bool operator ==(Object other) {
     return other.runtimeType == ($FilterValueType) && other is $FilterValueType;
+  }
+}
+
+/// from: de.yugata.easy.edits.editor.filter.FilterType
+class FilterType extends jni.JObject {
+  @override
+  late final jni.JObjType<FilterType> $type = type;
+
+  FilterType.fromRef(
+    jni.JObjectPtr ref,
+  ) : super.fromRef(ref);
+
+  /// The type which includes information such as the signature of this class.
+  static const type = $FilterTypeType();
+  static final _get_VIDEO =
+      jniLookup<ffi.NativeFunction<jni.JniResult Function()>>(
+              "get_FilterType__VIDEO")
+          .asFunction<jni.JniResult Function()>();
+
+  /// from: static public final de.yugata.easy.edits.editor.filter.FilterType VIDEO
+  /// The returned object must be released after use, by calling the [release] method.
+  static FilterType get VIDEO =>
+      const $FilterTypeType().fromRef(_get_VIDEO().object);
+
+  static final _get_AUDIO =
+      jniLookup<ffi.NativeFunction<jni.JniResult Function()>>(
+              "get_FilterType__AUDIO")
+          .asFunction<jni.JniResult Function()>();
+
+  /// from: static public final de.yugata.easy.edits.editor.filter.FilterType AUDIO
+  /// The returned object must be released after use, by calling the [release] method.
+  static FilterType get AUDIO =>
+      const $FilterTypeType().fromRef(_get_AUDIO().object);
+
+  static final _get_TRANSITION =
+      jniLookup<ffi.NativeFunction<jni.JniResult Function()>>(
+              "get_FilterType__TRANSITION")
+          .asFunction<jni.JniResult Function()>();
+
+  /// from: static public final de.yugata.easy.edits.editor.filter.FilterType TRANSITION
+  /// The returned object must be released after use, by calling the [release] method.
+  static FilterType get TRANSITION =>
+      const $FilterTypeType().fromRef(_get_TRANSITION().object);
+
+  static final _values =
+      jniLookup<ffi.NativeFunction<jni.JniResult Function()>>(
+              "FilterType__values")
+          .asFunction<jni.JniResult Function()>();
+
+  /// from: static public de.yugata.easy.edits.editor.filter.FilterType[] values()
+  /// The returned object must be released after use, by calling the [release] method.
+  static jni.JArray<FilterType> values() {
+    return const jni.JArrayType($FilterTypeType()).fromRef(_values().object);
+  }
+
+  static final _valueOf = jniLookup<
+              ffi
+              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
+          "FilterType__valueOf")
+      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
+
+  /// from: static public de.yugata.easy.edits.editor.filter.FilterType valueOf(java.lang.String string)
+  /// The returned object must be released after use, by calling the [release] method.
+  static FilterType valueOf(
+    jni.JString string,
+  ) {
+    return const $FilterTypeType().fromRef(_valueOf(string.reference).object);
+  }
+}
+
+final class $FilterTypeType extends jni.JObjType<FilterType> {
+  const $FilterTypeType();
+
+  @override
+  String get signature => r"Lde/yugata/easy/edits/editor/filter/FilterType;";
+
+  @override
+  FilterType fromRef(jni.JObjectPtr ref) => FilterType.fromRef(ref);
+
+  @override
+  jni.JObjType get superType => const jni.JObjectType();
+
+  @override
+  final superCount = 1;
+
+  @override
+  int get hashCode => ($FilterTypeType).hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    return other.runtimeType == ($FilterTypeType) && other is $FilterTypeType;
   }
 }
