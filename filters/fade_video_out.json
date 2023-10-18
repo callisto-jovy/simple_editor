@@ -3,7 +3,7 @@
   "display_name": "Fade video out to black",
   "description": "Fades the edit to black at the end and displays a watermark.",
   "type": "VIDEO",
-  "command": "fade=t=out:st=$fadeStart$:d=$fadeDuration$, drawtext=fontcolor=white:enable='between(t,$fadeStart$,$fadeEnd$):fontsize=128:fontfile='$font$':text=yugata:x=(w-text_w)/2:y=(h-text_h)/2",
+  "command": "fade=t=out:st=$fadeStart$:d=$fadeDuration$, drawtext=text='yugata':enable='between(t,$fadeStart$,$fadeEnd$)':x=(w-text_w)/2:y=(h-text_h)/2:fontsize=128:fontfile='$font$':fontcolor=white",
   "settings": [
     {
       "name": "fadeStart",

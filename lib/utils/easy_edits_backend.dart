@@ -253,18 +253,6 @@ class FlutterWrapper_FlutterFilterWrapper extends jni.JObject {
     return const jni.JListType($FilterValueType())
         .fromRef(_getValues(reference).object);
   }
-
-  static final _toString1 = jniLookup<
-              ffi
-              .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
-          "FlutterWrapper_FlutterFilterWrapper__toString1")
-      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
-
-  /// from: public java.lang.String toString()
-  /// The returned object must be released after use, by calling the [release] method.
-  jni.JString toString1() {
-    return const jni.JStringType().fromRef(_toString1(reference).object);
-  }
 }
 
 final class $FlutterWrapper_FlutterFilterWrapperType

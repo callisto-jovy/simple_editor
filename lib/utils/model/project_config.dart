@@ -55,17 +55,14 @@ class ProjectConfig {
     json['editing_flags'].forEach((key, value) => editingOptions[key] = value);
     json['filters'].forEach(
       (v) => filters.where((element) => element.name == v['name']).forEach((element) {
-        final Map<String, String> values = {};
-        v['values'].forEach((k, v) => values[k] = v);
-
-        element.values = values;
+        v['values'].forEach((k, v) => element.values[k] = v);
         element.enabled = v['enabled'];
       }),
     ); //TODO: update, dont override
   }
 
   Map<String, dynamic> toJson() => {
-        'source_video': videoPath, // With these parameters, we need a main page.
+        'source_video': videoPath,
         'source_audio': audioPath,
         'peak_threshold': peakThreshold,
         'ms_threshold': msThreshold,
@@ -86,8 +83,9 @@ class ProjectConfig {
       'peak_threshold': peakThreshold,
       'ms_threshold': msThreshold,
       'working_path': config.videoProject.workingDirectory.path,
-      'output_path': '${path.basenameWithoutExtension(videoPath)}.mp4',
-      //TODO: Request for filename
+      'output_path': path.join(
+          config.videoProject.projectPath, '${path.basenameWithoutExtension(videoPath)}.mp4'),
+      //TODO: Request file picker for filename and path.
       'editor_state': {
         'intro_start': introStart == null ? -1 : introStart!.inMicroseconds,
         'intro_end': introEnd == null ? -1 : introEnd!.inMicroseconds,
