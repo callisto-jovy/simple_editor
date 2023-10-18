@@ -35,23 +35,24 @@ dependencies:
   media_kit_video: ^1.2.1                        # For video rendering.
   media_kit_libs_video: ^1.0.3                   # Native video dependencies.
   cupertino_icons: ^1.0.2
-  desktop_drop: ^0.4.4
-  cross_file: ^0.3.3+5
-  mime: ^1.0.4
-  ffi: ^2.1.0
-  jni: ^0.7.0
-  path: ^1.8.3
-  flutter_audio_waveforms: ^1.2.1+8
-  flexible_slider: 0.0.1
-  wav: ^1.3.0
-  file_picker: ^5.5.0
-  flutter_slider_drawer: ^2.1.3
-  settings_ui: ^2.0.2
-  icons_plus: ^4.0.0
-  fast_image_resizer: ^0.0.2
-  local_notifier: ^0.1.5
-  package_info_plus: ^4.2.0
-  awesome_snackbar_content: ^0.1.3
+  desktop_drop: ^0.4.4 # not used anymore, I think?
+  cross_file: ^0.3.3+5 # not used anymore, I think?
+  mime: ^1.0.4 # not used anymore, I think?
+  ffi: ^2.1.0 # ffi, native calls
+  jni: ^0.7.0 # native calls to the jni
+  path: ^1.8.3 # path for easy path joining, etc. just helper methods, I don't want to implement them by myself
+  flutter_audio_waveforms: ^1.2.1+8 # waveform display
+  flexible_slider: 0.0.1 # better flutter sliders
+  wav: ^1.3.0 # wav file parsing
+  file_picker: ^5.5.0 # file picker, duh
+  settings_ui: ^2.0.2 # easy settings ui, will be replaced by my own soon
+  icons_plus: ^4.0.0 # is this even used?? if not, remove
+  fast_image_resizer: ^0.0.2 # used for native image resizing which is 1000x faster
+  local_notifier: ^0.1.5 # needed for native notifications
+  package_info_plus: ^4.2.0 # used for config versioning
+  awesome_snackbar_content: ^0.1.3 # this really is just for a nice snackbar
+  selectable_autolink_text: ^2.6.0 # this dependency is not needed at all, i could just code this myself if I wasn't to lazy.
+  url_launcher: ^6.1.14
 
 
 

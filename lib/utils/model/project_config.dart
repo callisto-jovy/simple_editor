@@ -53,14 +53,15 @@ class ProjectConfig {
     introEnd = json['intro_end'] == -1 ? null : Duration(microseconds: json['intro_end']);
     json['time_stamps'].forEach((v) => timeStamps.add(TimeStamp.fromJson(v)));
     json['editing_flags'].forEach((key, value) => editingOptions[key] = value);
-    json['filters']
-        .forEach((v) => filters.where((element) => element.name == v['name']).forEach((element) {
-              final Map<String, String> values = {};
-              v['values'].forEach((k, v) => values[k] = v);
+    json['filters'].forEach(
+      (v) => filters.where((element) => element.name == v['name']).forEach((element) {
+        final Map<String, String> values = {};
+        v['values'].forEach((k, v) => values[k] = v);
 
-              element.values = values;
-              element.enabled = v['enabled'];
-            })); //TODO: update, dont override
+        element.values = values;
+        element.enabled = v['enabled'];
+      }),
+    ); //TODO: update, dont override
   }
 
   Map<String, dynamic> toJson() => {

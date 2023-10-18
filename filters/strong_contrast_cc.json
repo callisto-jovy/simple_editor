@@ -1,0 +1,15 @@
+{
+  "name": "strong_contrast_cc",
+  "display_name": "Strong Contrast Color Correction",
+  "description": "Color corrects the video to use strong contrast, this can increase detail in the final output. First, a contrast is applied, then the image is lighted.",
+  "help": "https://www.ffmpeg.org/ffmpeg-filters.html#curves-1",
+  "type": "VIDEO",
+  "command": "[in]curves=preset=$contrastPreset$[c0]; [c0]curves=preset=lighter[c1]; [c1]curves=all='0/0 0.5/0.4 1/1'[out]",
+  "settings": [
+    {
+      "name": "contrastPreset",
+      "default": "medium_contrast",
+      "type": "VALUE"
+    }
+  ]
+}

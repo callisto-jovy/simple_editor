@@ -57,7 +57,7 @@ class _SettingsPageState extends State<SettingsPage> {
               return SettingsTile.navigation(
                 onPressed: (context) => toFilterPage(context, e),
                 leading: const Icon(Icons.filter),
-                title: Text(e.name),
+                title: Text(e.displayName),
               );
             }).toList(),
           )
