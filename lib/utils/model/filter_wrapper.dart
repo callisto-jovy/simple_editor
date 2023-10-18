@@ -6,7 +6,7 @@ class FilterWrapper {
   final String help;
   final String displayName;
 
-  Map<String, String> values;
+  final Map<String, String> values;
   bool enabled;
 
   // TODO: Maybe just fallback for optional attributes?

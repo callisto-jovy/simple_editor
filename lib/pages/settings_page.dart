@@ -44,7 +44,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       },
                       initialValue: value,
                       leading: const Icon(Icons.flag),
-                      title: Text(key),
+                      title: Text(key.replaceAll('_', ' ').toLowerCase()),
                     ),
                   ),
                 )

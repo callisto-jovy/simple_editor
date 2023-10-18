@@ -23,17 +23,18 @@ class _FilterPageState extends State<FilterPage> {
     return widget.wrapper.values
         .map((key, value) {
           return MapEntry(
-              key,
-              TextFormField(
-                onFieldSubmitted: (value) => widget.wrapper.values[key] = value,
-                textAlignVertical: TextAlignVertical.center,
-                decoration: InputDecoration(
-                  icon: const Icon(Icons.timelapse),
-                  labelText: key,
-                  hintText: 'Current value: $value',
-                  border: InputBorder.none,
-                ),
-              ));
+            key,
+            TextFormField(
+              onFieldSubmitted: (value) => widget.wrapper.values[key] = value,
+              textAlignVertical: TextAlignVertical.center,
+              decoration: InputDecoration(
+                icon: const Icon(Icons.timelapse),
+                labelText: key,
+                hintText: 'Current value: $value',
+                border: InputBorder.none,
+              ),
+            ),
+          );
         })
         .values
         .toList();
