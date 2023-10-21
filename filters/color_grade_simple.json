@@ -1,0 +1,30 @@
+{
+  "name": "color_grade_simple",
+  "display_name": "Simple color grading",
+  "description": "Adjust color options.",
+  "help": "For value bounds, see: https://ffmpeg.org/ffmpeg-filters.html#eq",
+  "command": "eq=brightness=$brightness$:saturation=$saturation$:gamma=$gamma$:contrast=$contrast$",
+  "type": "VIDEO",
+  "settings": [
+    {
+      "name": "brightness",
+      "type": "VALUE",
+      "default": "0"
+    },
+    {
+      "name": "saturation",
+      "type": "VALUE",
+      "default": "1"
+    },
+    {
+      "name": "gamma",
+      "type": "VALUE",
+      "default": "1"
+    },
+    {
+      "name": "contrast",
+      "type": "VALUE",
+      "default": "1"
+    }
+  ]
+}

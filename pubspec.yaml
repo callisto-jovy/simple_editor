@@ -44,7 +44,7 @@ dependencies:
   flutter_audio_waveforms: ^1.2.1+8 # waveform display
   flexible_slider: 0.0.1 # better flutter sliders
   wav: ^1.3.0 # wav file parsing
-  file_picker: ^5.5.0 # file picker, duh
+  file_picker: ^6.0.0 # file picker, duh
   settings_ui: ^2.0.2 # easy settings ui, will be replaced by my own soon
   icons_plus: ^4.0.0 # is this even used?? if not, remove
   fast_image_resizer: ^0.0.2 # used for native image resizing which is 1000x faster
@@ -53,6 +53,7 @@ dependencies:
   awesome_snackbar_content: ^0.1.3 # this really is just for a nice snackbar
   selectable_autolink_text: ^2.6.0 # this dependency is not needed at all, i could just code this myself if I wasn't to lazy.
   url_launcher: ^6.1.14
+  touchable: ^1.0.2
 
 
 
@@ -66,7 +67,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^2.0.0
+  flutter_lints: ^3.0.0
   ffigen: ^9.0.1
   jnigen: ^0.7.0
 
