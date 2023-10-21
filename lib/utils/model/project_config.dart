@@ -31,6 +31,7 @@ class ProjectConfig {
     'BEST_QUALITY': true,
     'SHUFFLE_SEQUENCES': false,
     'PRINT_DEBUG': true,
+    'OFFSET_AUDIO_FOR_INTRO': false
   };
 
   ProjectConfig();
@@ -58,7 +59,7 @@ class ProjectConfig {
         v['values'].forEach((k, v) => element.values[k] = v);
         element.enabled = v['enabled'];
       }),
-    ); //TODO: update, dont override
+    );
   }
 
   Map<String, dynamic> toJson() => {

@@ -27,6 +27,7 @@ Future<void> _edit() async {
   //TODO: Make sure that the state is fulfilled.
   final String json = config.toEditorConfig();
   // Run the export process in a new isolate
+
   await Isolate.run(() => FlutterWrapper.edit(JString.fromString(json))).then((value) {
     LocalNotification(
       title: 'Easy Edits',

@@ -316,6 +316,18 @@ class FlutterWrapper extends jni.JObject {
         .fromRef(_getFilters().object);
   }
 
+  static final _getEditingFlags =
+      jniLookup<ffi.NativeFunction<jni.JniResult Function()>>(
+              "FlutterWrapper__getEditingFlags")
+          .asFunction<jni.JniResult Function()>();
+
+  /// from: static public java.util.Map getEditingFlags()
+  /// The returned object must be released after use, by calling the [release] method.
+  static jni.JMap<jni.JString, jni.JString> getEditingFlags() {
+    return const jni.JMapType(jni.JStringType(), jni.JStringType())
+        .fromRef(_getEditingFlags().object);
+  }
+
   static final _exportSegments = jniLookup<
               ffi
               .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(

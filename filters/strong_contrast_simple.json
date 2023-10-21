@@ -1,0 +1,15 @@
+{
+  "name": "strong_contrast_simple",
+  "display_name": "Contrast Correction",
+  "description": "Color corrects the video to use strong contrast.",
+  "help": "https://www.ffmpeg.org/ffmpeg-filters.html#curves-1",
+  "type": "VIDEO",
+  "command": "curves=preset=$contrastPreset$",
+  "settings": [
+    {
+      "name": "contrastPreset",
+      "default": "medium_contrast",
+      "type": "VALUE"
+    }
+  ]
+}
