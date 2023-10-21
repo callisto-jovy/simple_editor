@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flexible_slider/flexible_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_waveforms/flutter_audio_waveforms.dart';
@@ -6,6 +7,7 @@ import 'package:path/path.dart' as path;
 import 'package:video_editor/utils/audio_data_loader.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/easy_edits_backend.dart';
+import 'package:video_editor/widgets/audio/audio_player_controls.dart';
 import 'package:video_editor/widgets/styles.dart';
 import 'package:video_editor/widgets/time_stamp_painer.dart';
 import 'package:wav/wav_file.dart';
@@ -18,6 +20,12 @@ class AudioAnalysis extends StatefulWidget {
 }
 
 class _AudioAnalysisState extends State<AudioAnalysis> {
+  /// [AudioPlayer] instance to play the audio from the file, in order to make the preview interactive.
+  final AudioPlayer _player = AudioPlayer();
+
+  Duration elapsedDuration = const Duration();
+  late Duration maxDuration;
+
   final List<double> samples = [];
   double lengthInMillis = 0;
 
@@ -41,6 +49,25 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
       samples.clear();
       samples.addAll(samplesData);
     });
+
+    // Set the max duration for the waveform
+    maxDuration = Duration(milliseconds: lengthInMillis.round());
+    // Listen for position changes, so that the state can change, whenever the position passes a beat.
+    _player.onPositionChanged.listen((event) {
+      setState(() {
+        // Enables the waveform to display the playback.
+        elapsedDuration = event;
+        // TODO: toggle beat if detected (was a timestamp passed?)
+        // Display beat with a certain time.
+      });
+    });
+
+    // Start the playback
+    _playAudioSource();
+  }
+
+  void _playAudioSource() {
+    _player.play(DeviceFileSource(config.videoProject.config.audioPath));
   }
 
   Future<void> _executeTimeStamps() async {
@@ -111,7 +138,7 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
           ),
         ),
         const Padding(padding: EdgeInsets.all(25)),
-        Flexible(
+        Expanded(
           child: Listener(
             onPointerUp: (event) {
               final RenderBox? referenceBox =
@@ -132,6 +159,9 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
                     samples: samples,
                     height: size.height * 0.5,
                     width: size.width * 0.95,
+                    elapsedDuration: elapsedDuration,
+                    maxDuration: maxDuration,
+                    activeColor: Colors.greenAccent,
                   ),
                 ),
                 CustomPaint(
@@ -156,11 +186,20 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
             ),
           ),
         ),
-        const Padding(padding: EdgeInsets.all(25)),
-        TextButton(
-          onPressed: () => _executeTimeStamps(),
-          style: textButtonStyle(context),
-          child: const Text('Run analysis'),
+        Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              //TODO: Play / pause in a single button..
+              PlayerWidget(player: _player),
+              TextButton(
+                onPressed: () => _executeTimeStamps(),
+                style: textButtonStyle(context),
+                child: const Text('Run analysis'),
+              ),
+            ],
+          ),
         )
       ]),
     );

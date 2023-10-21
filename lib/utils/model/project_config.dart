@@ -26,13 +26,8 @@ class ProjectConfig {
 
   /// [Map] of editing options. Key: the flag's key. Value: Whether the flag is to be enabled.
   /// TODO: grab from the backend (see filters).
-  final Map<String, bool> editingOptions = {
-    'WRITE_HDR_OPTIONS': true,
-    'BEST_QUALITY': true,
-    'SHUFFLE_SEQUENCES': false,
-    'PRINT_DEBUG': true,
-    'OFFSET_AUDIO_FOR_INTRO': false
-  };
+  final Map<String, bool> editingOptions = backend.FlutterWrapper.getEditingFlags()
+      .map((key, value) => MapEntry(key.toDartString(releaseOriginal: true), false));
 
   ProjectConfig();
 
