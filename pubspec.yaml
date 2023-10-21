@@ -53,7 +53,8 @@ dependencies:
   awesome_snackbar_content: ^0.1.3 # this really is just for a nice snackbar
   selectable_autolink_text: ^2.6.0 # this dependency is not needed at all, i could just code this myself if I wasn't to lazy.
   url_launcher: ^6.1.14
-  touchable: ^1.0.2
+  audioplayers: ^5.2.0
+  collection: ^1.17.2
 
 
 

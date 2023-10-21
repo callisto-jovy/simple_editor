@@ -9,10 +9,8 @@ import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions
 import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/model/timestamp.dart';
+import 'package:video_editor/widgets/cache_image_provider.dart';
 import 'package:video_editor/widgets/custom_video_controls.dart' as custom_controls;
-
-import '../widgets/cache_image_provider.dart';
-import 'main_project_page.dart';
 
 class VideoPlayer extends StatefulWidget {
   const VideoPlayer({super.key});
