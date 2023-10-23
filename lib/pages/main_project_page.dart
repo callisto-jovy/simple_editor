@@ -1,11 +1,26 @@
+import 'dart:async';
+import 'dart:isolate';
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:jni/jni.dart';
+import 'package:local_notifier/local_notifier.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 import 'package:video_editor/pages/audio_analysis.dart';
+import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/pages/video_player.dart';
 import 'package:video_editor/utils/config.dart' as config;
-import 'package:video_editor/widgets/easy_edits_app_bar.dart';
+import 'package:video_editor/utils/easy_edits_backend.dart';
+import 'package:video_editor/utils/model/timestamp.dart';
+import 'package:video_editor/utils/model/video_clip.dart';
+import 'package:video_editor/utils/preview_util.dart' as preview;
+import 'package:video_editor/widgets/cache_image_provider.dart';
 import 'package:video_editor/widgets/snackbars.dart';
 import 'package:video_editor/widgets/styles.dart';
+import 'package:video_editor/widgets/time_stamp_widget.dart';
+import 'package:video_editor/widgets/timeline_editor.dart';
 
 class MainProjectPage extends StatefulWidget {
   const MainProjectPage({super.key});
@@ -17,30 +32,46 @@ class MainProjectPage extends StatefulWidget {
 class _MainProjectPageState extends State<MainProjectPage> {
   /// [TextEditingController] which controls the video path
   final TextEditingController _videoPathController =
-      TextEditingController(text: config.videoProject.config.videoPath);
+  TextEditingController(text: config.videoProject.config.videoPath);
 
   /// [TextEditingController] which controls the audio path
   final TextEditingController _audioPathController =
-      TextEditingController(text: config.videoProject.config.audioPath);
+  TextEditingController(text: config.videoProject.config.audioPath);
 
   /// [TextEditingController] which controls the project name
   final TextEditingController _projectNameController =
-      TextEditingController(text: config.videoProject.projectName);
+  TextEditingController(text: config.videoProject.projectName);
 
-  final TextEditingController _projectPathController =
-      TextEditingController(text: config.videoProject.projectPath);
+  /// [StreamController] which is passed to the [TimeLineEditor] and triggers a refresh.
+  final StreamController<List<VideoClip>> _clipController = StreamController();
+
+  /// Create a [Player] to control playback.
+  final _player = Player(
+    configuration: const PlayerConfiguration(
+      title: 'Easy Edits',
+      bufferSize: 1024 * 1024 * 1024,
+      libass: true,
+    ),
+  );
+
+  /// Create a [VideoController] to handle video output from [Player].
+  late final _controller = VideoController(_player);
 
   @override
   void dispose() {
     super.dispose();
     _videoPathController.dispose();
     _audioPathController.dispose();
-    _projectPathController.dispose();
     _projectNameController.dispose();
+    _player.dispose();
   }
 
   @override
   void initState() {
+    // add the lastest preview path if not empty.
+    if (config.videoProject.config.previewPath.isNotEmpty) {
+      _player.add(Media(config.videoProject.config.previewPath));
+    }
     super.initState();
   }
 
@@ -64,19 +95,23 @@ class _MainProjectPageState extends State<MainProjectPage> {
     );
   }
 
+  void _generatePreview(final BuildContext buildContext) {
+    ScaffoldMessenger.of(context).showSnackBar(successSnackbar('Generating preview...'));
+    preview.generateEditPreview().then(_playPreview);
+  }
+
+  void _playPreview(final String previewPath) {
+    _player.stop();
+    // set the path in the config, thereby delete the old preview
+    config.previewPath = previewPath;
+    _player.open(Media(previewPath));
+  }
+
+  ///
   void _importFile(final Function(String) newPath) {
     FilePicker.platform.pickFiles(allowMultiple: false, dialogTitle: 'Pick file').then((value) {
       if (value != null) {
         newPath.call(value.files[0].path!);
-      }
-    });
-  }
-
-  void _selectProjectPath() {
-    FilePicker.platform.getDirectoryPath(dialogTitle: 'Select project path.').then((value) {
-      if (value != null) {
-        config.videoProject.projectPath = value;
-        _projectPathController.text = value;
       }
     });
   }
@@ -86,116 +121,329 @@ class _MainProjectPageState extends State<MainProjectPage> {
     ScaffoldMessenger.of(context).showSnackBar(successSnackbar('Successfully saved the project!'));
   }
 
-  Widget _buildProjectPathRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Flexible(
-          child: TextFormField(
-            controller: _projectPathController,
-            decoration: const InputDecoration(
-              labelText: 'Project path',
+  void _loadFile(Function() callback) async {
+    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+      dialogTitle: 'Import save file',
+      allowMultiple: false,
+    );
+
+    if (result != null) {
+      config.importFile(path: result.files[0].path);
+      callback.call();
+    }
+  }
+
+  Future<void> _edit() async {
+    await config.ensureOutExists();
+    //TODO: Make sure that the state is fulfilled.
+    final String json = config.toEditorConfig();
+    // Run the export process in a new isolate
+
+    await Isolate.run(() => FlutterWrapper.edit(JString.fromString(json))).then((value) {
+      LocalNotification(
+        title: 'Easy Edits',
+        body: 'Done editing.',
+      ).show();
+    });
+  }
+
+  Future<void> _exportSegments() async {
+    await config.ensureOutExists();
+    //TODO: Make sure that the state is fulfilled.
+    final String json = config.toEditorConfig();
+    // Run the export process in a new isolate
+    await Isolate.run(() => FlutterWrapper.exportSegments(JString.fromString(json))).then((value) {
+      LocalNotification(
+        title: 'Easy Edits',
+        body: 'Done exporting the segments.',
+      ).show();
+    });
+  }
+
+  void _timeStampDroppedOnTimeline(final TimeStamp timeStamp) {
+    // Convert the newly dropped timestamp to a clip
+    final List<double> beatTimes = config.videoProject.config.timeBetweenBeats();
+
+    final int nextIndex = config.videoProject.config.videoClips.length;
+
+    if (nextIndex >= beatTimes.length) {
+      return;
+    }
+    final Duration beatLength = Duration(milliseconds: beatTimes[nextIndex].round());
+
+    final VideoClip clip = VideoClip(timeStamp, beatLength);
+    // add to the global list
+    config.videoProject.config.videoClips.add(clip);
+
+    // Generate a preview of the clip. after that's finished, generate the edit preview.
+    preview.generateClipPreview(clip);
+
+    // pass the video projects, notify the projects
+    _clipController.add(config.videoProject.config.videoClips);
+  }
+
+  List<Widget> appBarTrailing(final BuildContext context) {
+    return [
+      TextButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SettingsPage(),
+            ),
+          );
+        },
+        child: const Text('Settings'),
+      ),
+      TextButton(
+        onPressed: () =>
+            _loadFile(() {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('Loaded config for ${config.videoProject.projectName}'),
+              ));
+
+              Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const MainProjectPage(), maintainState: true),
+                      (Route<dynamic> route) => false);
+            }),
+        child: const Text('Import'),
+      ),
+      TextButton(
+        onPressed: () => _edit(),
+        child: const Text('Edit'),
+      ),
+      TextButton(
+        onPressed: () => _exportSegments(),
+        child: const Text('Export Segments'),
+      ),
+      TextButton(
+        onPressed: () => _saveProject(context),
+        child: const Text('Save'),
+      )
+    ];
+  }
+
+  Widget _buildProjectName() {
+    return Padding(
+      padding: const EdgeInsets.only(right: 20),
+      child: EditableText(
+        style: Theme
+            .of(context)
+            .textTheme
+            .headlineSmall!,
+        controller: _projectNameController,
+        focusNode: FocusNode(),
+        cursorColor: Colors.blueGrey,
+        backgroundCursorColor: Colors.white,
+        onChanged: (value) => config.videoProject.projectName = value,
+      ),
+    );
+  }
+
+  Widget _buildAudioColumn(final BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(10.0), // inner padding
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Audio',
+              style: Theme
+                  .of(context)
+                  .textTheme
+                  .bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+            Text(config.videoProject.config.audioPath),
+            const Padding(padding: EdgeInsets.all(10)),
+            IconButton(
+              onPressed: () => _importFile((p0) => config.videoProject.config.audioPath = p0),
+              icon: const Icon(Icons.file_open),
+              style: iconButtonStyle(context),
+            ),
+            const Padding(padding: EdgeInsets.all(5)),
+            TextButton(
+              onPressed: () => _navigateToAudio(context),
+              style: textButtonStyle(context),
+              child: const Text('Edit'),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideoColumn(final BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Video',
+              style: Theme
+                  .of(context)
+                  .textTheme
+                  .bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+            Text(config.videoProject.config.videoPath),
+            const Padding(padding: EdgeInsets.all(10)),
+            IconButton(
+              onPressed: () => _importFile((p0) => config.videoProject.config.videoPath = p0),
+              icon: const Icon(Icons.file_open),
+              style: iconButtonStyle(context),
+            ),
+            const Padding(padding: EdgeInsets.all(5)),
+            TextButton(
+              onPressed: () => _navigateToVideo(context),
+              style: textButtonStyle(context),
+              child: const Text('Edit'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClipsGrid(final BuildContext context) {
+    return GridView.builder(
+      itemCount: config.videoProject.config.timeStamps.length,
+      itemBuilder: (context, index) {
+        final TimeStamp timeStamp = config.videoProject.config.timeStamps[index];
+
+        return LongPressDraggable(
+          data: timeStamp,
+          feedback: Image(
+            fit: BoxFit.cover,
+            filterQuality: FilterQuality.low,
+            image: CacheImageProvider(
+              '${timeStamp.start}',
+              Uint8List.view(timeStamp.startFrame!.buffer),
             ),
           ),
+          child: TimeStampCard(timeStamp: timeStamp),
+        );
+      },
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+      ),
+    );
+  }
+
+  Widget _buildClipsColumn(final BuildContext context) {
+    return Expanded(
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            children: [
+              Text(
+                'Clips',
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .bodyLarge,
+                textAlign: TextAlign.center,
+              ),
+              const Padding(padding: EdgeInsets.all(10)),
+              Expanded(child: _buildClipsGrid(context)),
+            ],
+          ),
         ),
-        const Padding(padding: EdgeInsets.all(10)),
-        IconButton(
-          onPressed: () => _selectProjectPath(),
-          icon: const Icon(Icons.file_open),
-          style: iconButtonStyle(context),
-        ),
+      ),
+    );
+  }
+
+  /// [Column] with the audio column, the video column and the video clips
+  Widget _buildAudioAndClipsColumn(final BuildContext context) {
+    return Column(
+      children: [
+        _buildAudioColumn(context),
+        _buildVideoColumn(context),
+        _buildClipsColumn(context),
       ],
     );
   }
 
-  Widget _buildAudioRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildEditColumn(final BuildContext context) {
+    final Size size = MediaQuery
+        .of(context)
+        .size;
+    return Column(
       children: [
-        Flexible(
-          child: TextFormField(
-            controller: _audioPathController,
-            decoration: const InputDecoration(
-              labelText: 'Audio path',
+        MaterialDesktopVideoControlsTheme(
+          normal: MaterialDesktopVideoControlsThemeData(topButtonBar: [
+            IconButton(
+              tooltip: 'Preview edit.',
+              onPressed: () => _generatePreview(context),
+              icon: const Icon(Icons.preview),
+            ),
+          ]),
+          fullscreen: const MaterialDesktopVideoControlsThemeData(
+            displaySeekBar: true,
+            automaticallyImplySkipNextButton: false,
+            automaticallyImplySkipPreviousButton: false,
+            //
+          ),
+          child: SizedBox(
+            width: size.width,
+            height: (size.height) * 9.0 / 16.0,
+            child: Video(
+              controller: _controller,
+              wakelock: true,
             ),
           ),
         ),
-        const Padding(padding: EdgeInsets.all(10)),
-        IconButton(
-          onPressed: () => _importFile((p0) => config.videoProject.config.audioPath = p0),
-          icon: const Icon(Icons.file_open),
-          style: iconButtonStyle(context),
-        ),
-        const Padding(padding: EdgeInsets.all(10)),
-        TextButton(
-            onPressed: () => _navigateToAudio(context),
-            style: textButtonStyle(context),
-            child: const Text('Edit'))
-      ],
-    );
-  }
-
-  Widget _buildVideoRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
         Flexible(
-          child: TextFormField(
-            controller: _videoPathController,
-            decoration: const InputDecoration(
-              labelText: 'Video path',
-            ),
+          child: DragTarget<TimeStamp>(
+            builder: (context, candidateData, rejectedData) {
+              return TimeLineEditor(
+                  videoClipController: _clipController,
+                  reorderingDone: () => print('Reordering done!'),
+                  // whenever the reordering is done, we generate a new edit preview.
+              );
+            },
+            onAccept: (data) {
+              _timeStampDroppedOnTimeline(data);
+            },
           ),
         ),
-        const Padding(padding: EdgeInsets.all(10)),
-        IconButton(
-          onPressed: () => _importFile((p0) => config.videoProject.config.videoPath = p0),
-          icon: const Icon(Icons.file_open),
-          style: iconButtonStyle(context),
-        ),
-        const Padding(padding: EdgeInsets.all(10)),
-        TextButton(
-          onPressed: () => _navigateToVideo(context),
-          style: textButtonStyle(context),
-          child: const Text('Edit'),
-        )
       ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final Size size = MediaQuery
+        .of(context)
+        .size;
+
     return Scaffold(
-      appBar: mainAppBar(context),
-      body: Center(
-        child: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              EditableText(
-                style: Theme.of(context).textTheme.headlineSmall!,
-                controller: _projectNameController,
-                focusNode: FocusNode(),
-                cursorColor: Colors.blueGrey,
-                backgroundCursorColor: Colors.white,
-                onChanged: (value) => config.videoProject.projectName = value,
-              ),
-              _buildVideoRow(),
-              const Padding(padding: EdgeInsets.all(15)),
-              _buildAudioRow(),
-              const Padding(padding: EdgeInsets.all(15)),
-              _buildProjectPathRow(),
-              const Padding(padding: EdgeInsets.all(15)),
-              TextButton(
-                onPressed: () => _saveProject(context),
-                style: textButtonStyle(context),
-                child: const Text('Save'),
-              ),
-            ],
+      appBar: AppBar(
+        backgroundColor: Theme
+            .of(context)
+            .colorScheme
+            .inversePrimary,
+        centerTitle: true,
+        title: _buildProjectName(),
+        actions: appBarTrailing(context),
+      ),
+      body: Row(
+        children: [
+          SizedBox(
+            width: size.width * 0.25,
+            height: size.height,
+            child: _buildAudioAndClipsColumn(context),
           ),
-        ),
+          Expanded(
+            child: _buildEditColumn(context),
+          ),
+        ],
       ),
     );
   }

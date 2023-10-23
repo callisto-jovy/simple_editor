@@ -1,0 +1,40 @@
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
+import 'package:video_editor/utils/model/timestamp.dart';
+import 'package:video_editor/widgets/cache_image_provider.dart';
+
+class TimeStampCard extends StatelessWidget {
+  final TimeStamp timeStamp;
+
+  const TimeStampCard({super.key, required this.timeStamp});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 5,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Image(
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.low,
+              image: CacheImageProvider(
+                '${timeStamp.start}',
+                Uint8List.view(timeStamp.startFrame!.buffer),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Text(timeStamp.start.label()),
+          ),
+        ],
+      ),
+    );
+  }
+}

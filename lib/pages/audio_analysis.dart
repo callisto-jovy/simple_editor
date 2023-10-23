@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flexible_slider/flexible_slider.dart';
 import 'package:flutter/material.dart';
@@ -23,13 +25,13 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
   /// [AudioPlayer] instance to play the audio from the file, in order to make the preview interactive.
   final AudioPlayer _player = AudioPlayer();
 
+  late StreamSubscription _playerPosition;
+
   Duration elapsedDuration = const Duration();
-  late Duration maxDuration;
+  Duration maxDuration = const Duration(milliseconds: 10000); //Placeholder duration
 
   final List<double> samples = [];
   double lengthInMillis = 0;
-
-  final List<double> timeStamps = [];
 
   final GlobalKey _paintKey = GlobalKey();
 
@@ -52,8 +54,10 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
 
     // Set the max duration for the waveform
     maxDuration = Duration(milliseconds: lengthInMillis.round());
+
     // Listen for position changes, so that the state can change, whenever the position passes a beat.
-    _player.onPositionChanged.listen((event) {
+
+    _playerPosition = _player.onPositionChanged.listen((event) {
       setState(() {
         // Enables the waveform to display the playback.
         elapsedDuration = event;
@@ -77,16 +81,16 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
         config.videoProject.config.msThreshold);
 
     setState(() {
-      timeStamps.clear();
+      config.videoProject.config.beatStamps.clear();
       for (var element in doubles) {
-        timeStamps.add(element.doubleValue(releaseOriginal: true));
+        config.videoProject.config.beatStamps.add(element.doubleValue(releaseOriginal: true));
       }
     });
   }
 
   void _addTimeStampForRemoval(final List<double> timeStamp) {
     for (final double element in timeStamp) {
-      timeStamps.remove(element);
+      config.videoProject.config.beatStamps.remove(element);
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -102,6 +106,13 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    _playerPosition.cancel();
+    _player.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
     return Scaffold(
@@ -111,7 +122,7 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
       ),
       body: Column(children: [
         const Padding(padding: EdgeInsets.all(25)),
-        Text('Total cuts: ${timeStamps.length}'),
+        Text('Total cuts: ${config.videoProject.config.beatStamps.length}'),
         const Padding(padding: EdgeInsets.all(25)),
         FlexibleSlider(
           onValueChanged: (p0) => config.videoProject.config.peakThreshold = p0,
@@ -171,13 +182,13 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
                     size.height * 0.5,
                   ),
                   foregroundPainter: TimeStampPainter(
-                    timeStamps: timeStamps,
+                    timeStamps: config.videoProject.config.beatStamps,
                     audioLength: lengthInMillis,
                     hitOffset: _hitOffset,
                     hitTimeStamp: _addTimeStampForRemoval,
                     newTimeStamp: (t) => WidgetsBinding.instance.addPostFrameCallback((_) {
                       setState(() {
-                        timeStamps.add(t);
+                        config.videoProject.config.beatStamps.add(t);
                       });
                     }),
                   ),

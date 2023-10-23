@@ -4,13 +4,20 @@ import 'package:path/path.dart' as path;
 import 'package:video_editor/utils/model/project_config.dart';
 
 class VideoProject {
-  /// The applications output directory. The segments are exported there (& optionally edited together)
+  /// The applications output [Directory]. The segments are exported into that [Directory] (& optionally edited together)
   Directory workingDirectory = Directory('editor_out');
 
+  /// [String] which holds the project's name.
   String projectName;
+
+  /// private [String] which stores the project path.
+  /// private, in order to overwrite the getter & setter, to ensure that the working directory is set.
   String _projectPath = '';
+
+  /// Reference to the [ProjectConfig]
   final ProjectConfig config;
 
+  /// Default constructor
   VideoProject(this._projectPath, {required this.projectName, required this.config}) {
     workingDirectory = Directory(path.join(_projectPath, 'editor_out'));
   }
@@ -35,4 +42,6 @@ class VideoProject {
   }
 
   String get projectPath => _projectPath;
+
+  /// TODO: pass through some getters for the project config, in order to eliminate long calls
 }

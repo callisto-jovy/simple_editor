@@ -1,7 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:video_editor/pages/main_project_page.dart';
-import 'package:video_editor/pages/new_project_page.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/model/project.dart';
 import 'package:video_editor/utils/model/project_config.dart';
