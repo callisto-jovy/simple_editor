@@ -24,9 +24,9 @@ source_path:
 
 classes:
   - 'de.yugata.easy.edits.audio.AudioAnalyser' # audio analysis
-  - 'de.yugata.easy.edits.editor.FlutterWrapper' # wrapper for the most used tasks, e.g. export segments, get filters, edit
-  - 'de.yugata.easy.edits.editor.filter.FilterValue' # needed for the filter wrapper
-  - 'de.yugata.easy.edits.editor.filter.FilterType' # needed for the filter wrapper
+  - 'de.yugata.easy.edits.wrapper.FlutterWrapper' # wrapper for the most used tasks, e.g. export segments, get filters, edit
+  - 'de.yugata.easy.edits.filter.FilterValue' # needed for the filter wrapper
+  - 'de.yugata.easy.edits.filter.FilterType' # needed for the filter wrapper
 
 
 maven_downloads:

@@ -67,6 +67,8 @@ class _VideoPlayerState extends State<VideoPlayer> {
   void dispose() {
     config.videoProject.config.timeStamps.clear();
     config.videoProject.config.timeStamps.addAll(timeStamps);
+    config.videoProject.config.introStart = introStart;
+    config.videoProject.config.introEnd = introEnd;
     _player.dispose();
     _scrollController.dispose();
     _timeLineScroll.dispose();

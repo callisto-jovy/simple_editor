@@ -2,10 +2,28 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path/path.dart' as path;
+import 'package:uuid/uuid.dart';
 import 'package:video_editor/utils/model/project.dart';
 import 'package:video_editor/utils/model/project_config.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
-import 'package:path/path.dart' as path;
+import 'package:video_editor/utils/model/video_clip.dart';
+
+const Uuid kUuid = Uuid();
+
+/// The applications [JsonEncoder] with a specified indent of two.
+const JsonEncoder kEncoder = JsonEncoder.withIndent('  ');
+
+late VideoProject videoProject;
+
+/// Setter for the preview path.
+/// Deletes the previous preview & sets the new path.
+set previewPath(String value) {
+  if (value.isNotEmpty) {
+    File(videoProject.config.previewPath).delete();
+  }
+  videoProject.config.previewPath = value;
+}
 
 /// Makes sure that the [Directory] exists
 Future<void> ensureOutExists() async {
@@ -15,16 +33,19 @@ Future<void> ensureOutExists() async {
   }
 }
 
-/// The applications [JsonEncoder] with a specified indent of two.
-const JsonEncoder encoder = JsonEncoder.withIndent('  ');
-
-late VideoProject videoProject;
-
 void fromJson(final Map<String, dynamic> json) {
   // Handle old app versions
   if (json['version'] == null) {
     _handleLegacyJson(json);
     return;
+  } else if (json['version'] == '1.0.0') {
+    json['config']['beat_times'] =
+        []; // add empty beat time list. saving the beat times has only been introduced in 1.1.0
+  } else if (json['version'] == '1.1.0') {
+    json['config']['video_clips'] = [];
+  } else if (json['version'] == '1.1.1') {
+    json['config']['preview_path'] = '';
+    json['config']['clip_previews'] = {};
   }
 
   // NOTE:: Whenever the config is changed in major ways or needs to be handled differently due to breaking changes,
@@ -37,13 +58,23 @@ Future<String> applicationState() async {
   final PackageInfo packageInfo = await PackageInfo.fromPlatform();
   final json = videoProject.toJson(packageInfo.version);
 
-  return encoder.convert(json);
+  return kEncoder.convert(json);
 }
 
 /// Creates a JSON [String] with all the app's state to pass to the backend.
 String toEditorConfig() {
   final json = videoProject.config.editorConfig();
-  return encoder.convert(json);
+  return kEncoder.convert(json);
+}
+
+String previewSegmentJson(final VideoClip videoClip) {
+  final json = videoProject.config.previewJson(videoClip);
+  return kEncoder.convert(json);
+}
+
+String previewJson(final List<String> previews) {
+  final json = videoProject.config.previewEdit(previews);
+  return kEncoder.convert(json);
 }
 
 void saveApplicationState() async {
