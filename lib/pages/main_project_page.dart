@@ -13,6 +13,7 @@ import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/pages/video_player.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/easy_edits_backend.dart';
+import 'package:video_editor/utils/error_util.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
 import 'package:video_editor/utils/preview_util.dart' as preview;
@@ -21,6 +22,7 @@ import 'package:video_editor/widgets/snackbars.dart';
 import 'package:video_editor/widgets/styles.dart';
 import 'package:video_editor/widgets/time_stamp_widget.dart';
 import 'package:video_editor/widgets/timeline_editor.dart';
+import 'package:window_manager/window_manager.dart';
 
 class MainProjectPage extends StatefulWidget {
   const MainProjectPage({super.key});
@@ -29,18 +31,18 @@ class MainProjectPage extends StatefulWidget {
   State<MainProjectPage> createState() => _MainProjectPageState();
 }
 
-class _MainProjectPageState extends State<MainProjectPage> {
+class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
   /// [TextEditingController] which controls the video path
   final TextEditingController _videoPathController =
-  TextEditingController(text: config.videoProject.config.videoPath);
+      TextEditingController(text: config.videoProject.config.videoPath);
 
   /// [TextEditingController] which controls the audio path
   final TextEditingController _audioPathController =
-  TextEditingController(text: config.videoProject.config.audioPath);
+      TextEditingController(text: config.videoProject.config.audioPath);
 
   /// [TextEditingController] which controls the project name
   final TextEditingController _projectNameController =
-  TextEditingController(text: config.videoProject.projectName);
+      TextEditingController(text: config.videoProject.projectName);
 
   /// [StreamController] which is passed to the [TimeLineEditor] and triggers a refresh.
   final StreamController<List<VideoClip>> _clipController = StreamController();
@@ -64,15 +66,56 @@ class _MainProjectPageState extends State<MainProjectPage> {
     _audioPathController.dispose();
     _projectNameController.dispose();
     _player.dispose();
+    // Remove the window manager listener
+    windowManager.removeListener(this);
   }
 
   @override
   void initState() {
+    super.initState();
+    // Add a new listener for the window closing.
+    windowManager.addListener(this);
+
     // add the lastest preview path if not empty.
     if (config.videoProject.config.previewPath.isNotEmpty) {
       _player.add(Media(config.videoProject.config.previewPath));
     }
-    super.initState();
+
+    windowManager.setPreventClose(true);
+    setState(() {});
+  }
+
+  @override
+  void onWindowClose() {
+    windowManager.isPreventClose().then((value) {
+      if (value) {
+        showDialog(
+            context: context,
+            builder: (_) {
+              return AlertDialog(
+                title: const Text('Are you sure you want to exit?'),
+                actions: [
+                  TextButton(
+                    child: const Text('No'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  TextButton(
+                    child: const Text('Yes'),
+                    onPressed: () {
+                      // Save app state & then close.
+                      config.saveApplicationState().then((value) {
+                        Navigator.of(context).pop();
+                        windowManager.destroy();
+                      });
+                    },
+                  ),
+                ],
+              );
+            });
+      }
+    });
   }
 
   /// Pushes the video player page
@@ -100,11 +143,11 @@ class _MainProjectPageState extends State<MainProjectPage> {
     preview.generateEditPreview().then(_playPreview);
   }
 
+  /// Play the edited preview
   void _playPreview(final String previewPath) {
     _player.stop();
     // set the path in the config, thereby delete the old preview
-    config.previewPath = previewPath;
-    _player.open(Media(previewPath));
+    config.handlePreview(previewPath).then((value) => _player.open(Media(previewPath)));
   }
 
   ///
@@ -138,11 +181,18 @@ class _MainProjectPageState extends State<MainProjectPage> {
     //TODO: Make sure that the state is fulfilled.
     final String json = config.toEditorConfig();
     // Run the export process in a new isolate
-
     await Isolate.run(() => FlutterWrapper.edit(JString.fromString(json))).then((value) {
       LocalNotification(
         title: 'Easy Edits',
         body: 'Done editing.',
+      ).show();
+    }).onError((error, stackTrace) {
+      dumpErrorLog(error, stackTrace);
+
+      LocalNotification(
+        title: 'Easy Edits',
+        body:
+            'An error occurred. The error has been dumped in a logfile. If you decide to open a report, attach this log.',
       ).show();
     });
   }
@@ -172,11 +222,8 @@ class _MainProjectPageState extends State<MainProjectPage> {
     final Duration beatLength = Duration(milliseconds: beatTimes[nextIndex].round());
 
     final VideoClip clip = VideoClip(timeStamp, beatLength);
-    // add to the global list
-    config.videoProject.config.videoClips.add(clip);
-
-    // Generate a preview of the clip. after that's finished, generate the edit preview.
-    preview.generateClipPreview(clip);
+    // Pass off to config to generate
+    config.createVideoClip(clip);
 
     // pass the video projects, notify the projects
     _clipController.add(config.videoProject.config.videoClips);
@@ -196,18 +243,16 @@ class _MainProjectPageState extends State<MainProjectPage> {
         child: const Text('Settings'),
       ),
       TextButton(
-        onPressed: () =>
-            _loadFile(() {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text('Loaded config for ${config.videoProject.projectName}'),
-              ));
+        onPressed: () => _loadFile(() {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Loaded config for ${config.videoProject.projectName}'),
+          ));
 
-              Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const MainProjectPage(), maintainState: true),
-                      (Route<dynamic> route) => false);
-            }),
+          Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const MainProjectPage(), maintainState: true),
+              (Route<dynamic> route) => false);
+        }),
         child: const Text('Import'),
       ),
       TextButton(
@@ -229,10 +274,7 @@ class _MainProjectPageState extends State<MainProjectPage> {
     return Padding(
       padding: const EdgeInsets.only(right: 20),
       child: EditableText(
-        style: Theme
-            .of(context)
-            .textTheme
-            .headlineSmall!,
+        style: Theme.of(context).textTheme.headlineSmall!,
         controller: _projectNameController,
         focusNode: FocusNode(),
         cursorColor: Colors.blueGrey,
@@ -251,10 +293,7 @@ class _MainProjectPageState extends State<MainProjectPage> {
           children: [
             Text(
               'Audio',
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .bodyLarge,
+              style: Theme.of(context).textTheme.bodyLarge,
               textAlign: TextAlign.center,
             ),
             Text(config.videoProject.config.audioPath),
@@ -285,10 +324,7 @@ class _MainProjectPageState extends State<MainProjectPage> {
           children: [
             Text(
               'Video',
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .bodyLarge,
+              style: Theme.of(context).textTheme.bodyLarge,
               textAlign: TextAlign.center,
             ),
             Text(config.videoProject.config.videoPath),
@@ -344,10 +380,7 @@ class _MainProjectPageState extends State<MainProjectPage> {
             children: [
               Text(
                 'Clips',
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .bodyLarge,
+                style: Theme.of(context).textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),
               const Padding(padding: EdgeInsets.all(10)),
@@ -371,9 +404,7 @@ class _MainProjectPageState extends State<MainProjectPage> {
   }
 
   Widget _buildEditColumn(final BuildContext context) {
-    final Size size = MediaQuery
-        .of(context)
-        .size;
+    final Size size = MediaQuery.of(context).size;
     return Column(
       children: [
         MaterialDesktopVideoControlsTheme(
@@ -403,9 +434,10 @@ class _MainProjectPageState extends State<MainProjectPage> {
           child: DragTarget<TimeStamp>(
             builder: (context, candidateData, rejectedData) {
               return TimeLineEditor(
-                  videoClipController: _clipController,
-                  reorderingDone: () => print('Reordering done!'),
-                  // whenever the reordering is done, we generate a new edit preview.
+                videoClipController: _clipController,
+                onReorder: config.updateVideoClips,
+                onStateChanged: config.updateVideoClip,
+                // whenever the reordering is done, we generate a new edit preview.
               );
             },
             onAccept: (data) {
@@ -419,16 +451,11 @@ class _MainProjectPageState extends State<MainProjectPage> {
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery
-        .of(context)
-        .size;
+    final Size size = MediaQuery.of(context).size;
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme
-            .of(context)
-            .colorScheme
-            .inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         centerTitle: true,
         title: _buildProjectName(),
         actions: appBarTrailing(context),

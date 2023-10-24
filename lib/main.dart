@@ -10,6 +10,7 @@ import 'package:video_editor/pages/create_project_page.dart';
 import 'package:video_editor/pages/main_project_page.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/widgets/styles.dart';
+import 'package:window_manager/window_manager.dart';
 
 const jarError = 'No JAR files were found.\n'
     'Run `dart run jnigen:download_maven_jars --config jnigen.yaml` '
@@ -45,6 +46,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Necessary initialization for package:media_kit.
   MediaKit.ensureInitialized();
+
+  await windowManager.ensureInitialized();
 
   await localNotifier.setup(
     appName: 'local_notifier_example',

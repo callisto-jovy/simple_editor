@@ -4,26 +4,23 @@ import 'dart:io';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
+import 'package:video_editor/utils/config_util.dart';
 import 'package:video_editor/utils/model/project.dart';
 import 'package:video_editor/utils/model/project_config.dart';
-import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
+import 'package:video_editor/utils/preview_util.dart';
 
+/// The applications [Uuid]
 const Uuid kUuid = Uuid();
 
 /// The applications [JsonEncoder] with a specified indent of two.
 const JsonEncoder kEncoder = JsonEncoder.withIndent('  ');
 
+/// the current [VideoProject], has not be not null.
 late VideoProject videoProject;
 
-/// Setter for the preview path.
-/// Deletes the previous preview & sets the new path.
-set previewPath(String value) {
-  if (value.isNotEmpty) {
-    File(videoProject.config.previewPath).delete();
-  }
-  videoProject.config.previewPath = value;
-}
+/// Getter to the underlying project config, in order to reduce call length
+ProjectConfig get config => videoProject.config;
 
 /// Makes sure that the [Directory] exists
 Future<void> ensureOutExists() async {
@@ -36,7 +33,7 @@ Future<void> ensureOutExists() async {
 void fromJson(final Map<String, dynamic> json) {
   // Handle old app versions
   if (json['version'] == null) {
-    _handleLegacyJson(json);
+    videoProject = handleLegacyJson(json);
     return;
   } else if (json['version'] == '1.0.0') {
     json['config']['beat_times'] =
@@ -47,11 +44,20 @@ void fromJson(final Map<String, dynamic> json) {
     json['config']['preview_path'] = '';
     json['config']['clip_previews'] = {};
   }
-
   // NOTE:: Whenever the config is changed in major ways or needs to be handled differently due to breaking changes,
   // we can have a different method to read previous configs. At least after version 1.0.0 when saving the config again, the old config is overwritten.
 
   videoProject = VideoProject.fromJson(json);
+}
+
+void removeClip(final VideoClip videoClip) {
+  // Delete old preview
+  if (config.generatedPreviews.containsKey(videoClip.id)) {
+    File(config.generatedPreviews[videoClip.id]!).delete();
+  }
+
+  config.generatedPreviews.remove(videoClip.id);
+  config.videoClips.remove(videoClip);
 }
 
 Future<String> applicationState() async {
@@ -61,23 +67,69 @@ Future<String> applicationState() async {
   return kEncoder.convert(json);
 }
 
+Future<void> handlePreview(final String previewPath) async {
+  /// Deletes the previous preview & sets the new path.
+  if (config.previewPath.isNotEmpty) {
+    await File(config.previewPath).delete();
+  }
+
+  config.previewPath = previewPath;
+}
+
 /// Creates a JSON [String] with all the app's state to pass to the backend.
 String toEditorConfig() {
-  final json = videoProject.config.editorConfig();
+  final json = config.editorConfig();
   return kEncoder.convert(json);
 }
 
 String previewSegmentJson(final VideoClip videoClip) {
-  final json = videoProject.config.previewJson(videoClip);
+  final json = config.previewJson(videoClip);
   return kEncoder.convert(json);
 }
 
 String previewJson(final List<String> previews) {
-  final json = videoProject.config.previewEdit(previews);
+  final json = config.previewEdit(previews);
   return kEncoder.convert(json);
 }
 
-void saveApplicationState() async {
+void _setClipPath(final VideoClip videoClip, final String path) {
+  config.generatedPreviews[videoClip.id] = path;
+}
+
+void createVideoClip(final VideoClip videoClip) {
+  // add to the global list
+  config.videoClips.add(videoClip);
+
+  // Generate a preview of the clip. after that's finished, generate the edit preview.
+
+  generateSinglePreview(videoClip).then((value) => _setClipPath(videoClip, value));
+}
+
+void updateVideoClip(final VideoClip videoClip) {
+  final int indexOfClip = config.videoClips.indexOf(videoClip);
+
+  // TODO: handle this
+  if (indexOfClip == -1) {
+    return;
+  }
+
+  final VideoClip oldVideoClip = config.videoClips[indexOfClip];
+  // update the previous clip; TODO: Instead of replacing, edit the state?
+  videoProject.config.videoClips[indexOfClip] = videoClip;
+
+  if (videoClip.clipLength.inMilliseconds != oldVideoClip.clipLength.inMilliseconds) {
+    // Trigger regenerate
+    generateSinglePreview(videoClip).then((value) => _setClipPath(videoClip, value));
+  }
+}
+
+void updateVideoClips(final List<VideoClip> clips) {
+  for (final VideoClip element in clips) {
+    updateVideoClip(element);
+  }
+}
+
+Future<void> saveApplicationState() async {
   final File file = File(path.join(videoProject.projectPath, 'application_state.json'));
   final String appState = await applicationState();
   file.writeAsString(appState);
@@ -90,33 +142,4 @@ void importFile({String? path}) {
   dynamic json = jsonDecode(file.readAsStringSync());
 
   fromJson(json);
-}
-
-void _handleLegacyJson(final Map<String, dynamic> json) {
-  final ProjectConfig config = ProjectConfig();
-
-  config.peakThreshold = json['peak_threshold'];
-  config.msThreshold = json['ms_threshold'];
-  config.videoPath = json['source_video'];
-  config.audioPath = json['source_audio'];
-
-  dynamic editorState = json['editor_state'];
-
-  config.introStart = Duration(microseconds: editorState['intro_start']);
-  config.introEnd = Duration(microseconds: editorState['intro_end']);
-
-  final List<dynamic> micros = editorState['time_stamps'];
-  final List<dynamic>? thumbnails = json['thumbnails'];
-
-  for (int i = 0; i < micros.length; i++) {
-    final Duration duration = Duration(microseconds: micros[i]);
-
-    if (thumbnails != null && thumbnails.length > i && thumbnails[i] != null) {
-      final String thumbnail = thumbnails[i];
-      config.timeStamps.add(TimeStamp(duration, base64Decode(thumbnail).buffer.asByteData()));
-    } else {
-      config.timeStamps.add(TimeStamp(duration, null));
-    }
-  }
-  videoProject = VideoProject('', projectName: 'NullProject', config: config);
 }

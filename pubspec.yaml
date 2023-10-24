@@ -52,11 +52,11 @@ dependencies:
   package_info_plus: ^4.2.0 # used for config versioning
   awesome_snackbar_content: ^0.1.3 # this really is just for a nice snackbar
   selectable_autolink_text: ^2.6.0 # this dependency is not needed at all, i could just code this myself if I wasn't to lazy.
-  url_launcher: ^6.1.14
-  audioplayers: ^5.2.0
-  collection: ^1.17.2
-  uuid: ^3.0.7
-
+  url_launcher: ^6.1.14 # url launcher for tooltip texts
+  audioplayers: ^5.2.0 # audioplayer for the audio analysis
+  uuid: ^3.0.7 # uuid for unique ids
+  window_manager: ^0.3.7 #
+  isolate_pool_2: ^1.0.5
 
 
 

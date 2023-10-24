@@ -137,7 +137,7 @@ class ProjectConfig {
             : videoClips
                 .map((e) => {
                       'time_stamp': e.timeStamp.start.inMicroseconds,
-                      'mute_audio': true,
+                      'mute_audio': e.audioMuted,
                     })
                 .toList(), // NOTE:: breaking change for older backend versions.
         'beat_times': timeBetweenBeats(),
