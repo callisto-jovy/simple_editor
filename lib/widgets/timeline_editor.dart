@@ -14,10 +14,11 @@ import 'package:wav/wav.dart';
 class TimeLineEditor extends StatefulWidget {
   final StreamController<List<VideoClip>> videoClipController;
 
-  final Function() reorderingDone;
+  final Function(List<VideoClip>) onReorder;
+  final Function(VideoClip) onStateChanged;
 
   const TimeLineEditor(
-      {super.key, required this.videoClipController, required this.reorderingDone});
+      {super.key, required this.videoClipController, required this.onReorder, required this.onStateChanged});
 
   @override
   State<TimeLineEditor> createState() => _TimeLineEditorState();
@@ -32,6 +33,10 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
   /// Starts to load the audio from the config video path.
   /// Calculates the length in milliseconds, chops the samples & adds them to the [List]
   Future<void> _loadAudio() async {
+    if(config.videoProject.config.audioPath.isEmpty) {
+      return;
+    }
+
     final Wav wav = await Wav.readFile(config.videoProject.config.audioPath);
 
     /// Total length / spp = length in seconds
@@ -74,45 +79,56 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
         padding: const EdgeInsets.all(8.0),
         height: 160,
         width: width,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Image(
-                fit: BoxFit.cover,
-                filterQuality: FilterQuality.low,
-                image: CacheImageProvider(
-                  '${clip.timeStamp.start}',
-                  Uint8List.view(clip.timeStamp.startFrame!.buffer),
+        child: Dismissible(
+          key: Key('$index'),
+          onDismissed: (direction) {
+            setState(() {
+              config.removeClip(clip);
+            });
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Image(
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.low,
+                  image: CacheImageProvider(
+                    '${clip.timeStamp.start}',
+                    Uint8List.view(clip.timeStamp.startFrame!.buffer),
+                  ),
                 ),
               ),
-            ),
-            Container(
-              alignment: Alignment.center,
-              color: Colors.green,
-              child: Text(
-                '${clip.timeStamp.start.label()} | ${clip.clipLength.inMilliseconds}ms',
-              ),
-            ),
-            InkWell(
-              onTap: () {
-                setState(() {
-                  clip.audioMuted = !clip.audioMuted;
-                });
-              },
-              child: Container(
+              Container(
                 alignment: Alignment.center,
-                color: clip.audioMuted ? Colors.white24 : Colors.white54,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    clip.audioMuted ? const Icon(Icons.volume_off) : const Icon(Icons.volume_up),
-                    const Text('Audio'),
-                  ],
+                color: Colors.green,
+                child: Text(
+                  '${clip.timeStamp.start.label()} | ${clip.clipLength.inMilliseconds}ms',
                 ),
               ),
-            ),
-          ],
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    clip.audioMuted = !clip.audioMuted;
+
+                    // update the backend
+                    widget.onStateChanged.call(clip);
+                  });
+                },
+                child: Container(
+                  alignment: Alignment.center,
+                  color: clip.audioMuted ? Colors.white24 : Colors.white54,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      clip.audioMuted ? const Icon(Icons.volume_off) : const Icon(Icons.volume_up),
+                      const Text('Audio'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -141,12 +157,10 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
 
           for (int i = 0; i < clips.length; i++) {
             clips[i].clipLength = Duration(milliseconds: beatTimes[i].round());
-
-            // regenerate all previews... TODO: Optimize this.
-            generateClipPreview(clips[i]);
           }
 
-          widget.reorderingDone.call();
+          // Inform the parent that the clips have been reordered, so the backend can be updates accordingly.
+          widget.onReorder.call(clips);
         });
       },
     );
