@@ -71,26 +71,26 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
   }
 
   void _playAudioSource() {
-    _player.play(DeviceFileSource(config.videoProject.config.audioPath));
+    _player.play(DeviceFileSource(config.config.audioPath));
   }
 
   Future<void> _executeTimeStamps() async {
     final JList<JDouble> doubles = AudioAnalyser.analyseStamps(
-        JString.fromString(config.videoProject.config.audioPath),
-        config.videoProject.config.peakThreshold,
-        config.videoProject.config.msThreshold);
+        JString.fromString(config.config.audioPath),
+        config.config.peakThreshold,
+        config.config.msThreshold);
 
     setState(() {
-      config.videoProject.config.beatStamps.clear();
+      config.config.beatStamps.clear();
       for (var element in doubles) {
-        config.videoProject.config.beatStamps.add(element.doubleValue(releaseOriginal: true));
+        config.config.beatStamps.add(element.doubleValue(releaseOriginal: true));
       }
     });
   }
 
   void _addTimeStampForRemoval(final List<double> timeStamp) {
     for (final double element in timeStamp) {
-      config.videoProject.config.beatStamps.remove(element);
+      config.config.beatStamps.remove(element);
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -118,14 +118,14 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(path.basename(config.videoProject.config.audioPath)),
+        title: Text(path.basename(config.config.audioPath)),
       ),
       body: Column(children: [
         const Padding(padding: EdgeInsets.all(25)),
-        Text('Total cuts: ${config.videoProject.config.beatStamps.length}'),
+        Text('Total cuts: ${config.config.beatStamps.length}'),
         const Padding(padding: EdgeInsets.all(25)),
         FlexibleSlider(
-          onValueChanged: (p0) => config.videoProject.config.peakThreshold = p0,
+          onValueChanged: (p0) => config.config.peakThreshold = p0,
           max: 1,
           divisions: 100,
           fractionDigits: 4,
@@ -137,7 +137,7 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
           ),
         ),
         FlexibleSlider(
-          onValueChanged: (p0) => config.videoProject.config.msThreshold = p0,
+          onValueChanged: (p0) => config.config.msThreshold = p0,
           max: 2000,
           divisions: 100,
           fractionDigits: 4,
@@ -182,13 +182,16 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
                     size.height * 0.5,
                   ),
                   foregroundPainter: TimeStampPainter(
-                    timeStamps: config.videoProject.config.beatStamps,
+                    timeStamps: config.config.beatStamps,
                     audioLength: lengthInMillis,
                     hitOffset: _hitOffset,
                     hitTimeStamp: _addTimeStampForRemoval,
                     newTimeStamp: (t) => WidgetsBinding.instance.addPostFrameCallback((_) {
                       setState(() {
-                        config.videoProject.config.beatStamps.add(t);
+
+                        config.config.beatStamps.add(t);
+                        // Sort timestamps.
+                        config.config.beatStamps.sort();
                       });
                     }),
                   ),
