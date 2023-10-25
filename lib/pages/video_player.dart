@@ -9,7 +9,7 @@ import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions
 import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/model/timestamp.dart';
-import 'package:video_editor/widgets/cache_image_provider.dart';
+import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/widgets/custom_video_controls.dart' as custom_controls;
 
 class VideoPlayer extends StatefulWidget {
@@ -19,8 +19,9 @@ class VideoPlayer extends StatefulWidget {
   State<VideoPlayer> createState() => _VideoPlayerState();
 }
 
-///
+
 class _VideoPlayerState extends State<VideoPlayer> {
+
   /// Create a [Player] to control playback.
   final _player = Player(
     configuration: const PlayerConfiguration(

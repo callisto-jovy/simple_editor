@@ -25,16 +25,25 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
   /// [AudioPlayer] instance to play the audio from the file, in order to make the preview interactive.
   final AudioPlayer _player = AudioPlayer();
 
-  late StreamSubscription _playerPosition;
+  /// [StreamSubscription] for the audio player's position. Canceled in dispose.
+  late final StreamSubscription _playerPositionStream;
 
-  Duration elapsedDuration = const Duration();
-  Duration maxDuration = const Duration(milliseconds: 10000); //Placeholder duration
+  /// [Duration] for the position of the audio player.
+  Duration _playerPosition = const Duration();
 
-  final List<double> samples = [];
-  double lengthInMillis = 0;
+  /// The length [Duration] of the audio file.
+  Duration _audioLength = const Duration(milliseconds: 10000); //Placeholder duration
 
+  /// [List] of the audio file's audio samples.
+  final List<double> _samples = [];
+
+  ///
+  double _lengthInMillis = 0;
+
+  /// [GlobalKey] assigned to the timestamp painer.
   final GlobalKey _paintKey = GlobalKey();
 
+  /// The [Offset] of the latest mouse hit.
   Offset? _hitOffset;
 
   /// Starts to load the audio from the config video path.
@@ -43,37 +52,33 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
     final Wav wav = await Wav.readFile(config.videoProject.config.audioPath);
 
     /// Total length / spp = length in seconds
-    lengthInMillis = ((wav.toMono().length / wav.samplesPerSecond) * 1000);
+    _lengthInMillis = ((wav.toMono().length / wav.samplesPerSecond) * 1000);
 
-    final samplesData = chopSamples(wav.toMono(), wav.samplesPerSecond);
+    final List<double> samplesData = chopSamples(wav.toMono(), wav.samplesPerSecond);
 
     setState(() {
-      samples.clear();
-      samples.addAll(samplesData);
+      _samples.clear();
+      _samples.addAll(samplesData);
     });
 
     // Set the max duration for the waveform
-    maxDuration = Duration(milliseconds: lengthInMillis.round());
+    _audioLength = Duration(milliseconds: _lengthInMillis.round());
 
     // Listen for position changes, so that the state can change, whenever the position passes a beat.
-
-    _playerPosition = _player.onPositionChanged.listen((event) {
+    _playerPositionStream = _player.onPositionChanged.listen((event) {
       setState(() {
         // Enables the waveform to display the playback.
-        elapsedDuration = event;
+        _playerPosition = event;
         // TODO: toggle beat if detected (was a timestamp passed?)
         // Display beat with a certain time.
       });
     });
 
     // Start the playback
-    _playAudioSource();
-  }
-
-  void _playAudioSource() {
     _player.play(DeviceFileSource(config.config.audioPath));
   }
 
+  ///
   Future<void> _executeTimeStamps() async {
     final JList<JDouble> doubles = AudioAnalyser.analyseStamps(
         JString.fromString(config.config.audioPath),
@@ -108,8 +113,11 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
   @override
   void dispose() {
     super.dispose();
-    _playerPosition.cancel();
+    _playerPositionStream.cancel();
     _player.dispose();
+
+    // update all video clips...
+    config.updateClipTimes();
   }
 
   @override
@@ -120,102 +128,103 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(path.basename(config.config.audioPath)),
       ),
-      body: Column(children: [
-        const Padding(padding: EdgeInsets.all(25)),
-        Text('Total cuts: ${config.config.beatStamps.length}'),
-        const Padding(padding: EdgeInsets.all(25)),
-        FlexibleSlider(
-          onValueChanged: (p0) => config.config.peakThreshold = p0,
-          max: 1,
-          divisions: 100,
-          fractionDigits: 4,
-          textDecoration: const InputDecoration(
-            label: Text("Peak Threshold"),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(15)),
+      body: Column(
+        children: [
+          const Padding(padding: EdgeInsets.all(25)),
+          Text('Total cuts: ${config.config.beatStamps.length}'),
+          const Padding(padding: EdgeInsets.all(25)),
+          FlexibleSlider(
+            onValueChanged: (p0) => config.config.peakThreshold = p0,
+            max: 1,
+            divisions: 100,
+            fractionDigits: 4,
+            textDecoration: const InputDecoration(
+              label: Text("Peak Threshold"),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(15)),
+              ),
             ),
           ),
-        ),
-        FlexibleSlider(
-          onValueChanged: (p0) => config.config.msThreshold = p0,
-          max: 2000,
-          divisions: 100,
-          fractionDigits: 4,
-          textDecoration: const InputDecoration(
-            label: Text("Ms Threshold"),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(15)),
+          FlexibleSlider(
+            onValueChanged: (p0) => config.config.msThreshold = p0,
+            max: 2000,
+            divisions: 100,
+            fractionDigits: 4,
+            textDecoration: const InputDecoration(
+              label: Text("Ms Threshold"),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(15)),
+              ),
             ),
           ),
-        ),
-        const Padding(padding: EdgeInsets.all(25)),
-        Expanded(
-          child: Listener(
-            onPointerUp: (event) {
-              final RenderBox? referenceBox =
-                  _paintKey.currentContext?.findRenderObject() as RenderBox?;
+          const Padding(padding: EdgeInsets.all(25)),
+          Expanded(
+            child: Listener(
+              onPointerUp: (event) {
+                final RenderBox? referenceBox =
+                    _paintKey.currentContext?.findRenderObject() as RenderBox?;
 
-              if (referenceBox == null) return;
+                if (referenceBox == null) return;
 
-              final Offset offset = event.localPosition;
+                final Offset offset = event.localPosition;
 
-              setState(() {
-                _hitOffset = offset;
-              });
-            },
-            child: Stack(
+                setState(() {
+                  _hitOffset = offset;
+                });
+              },
+              child: Stack(
+                children: [
+                  RepaintBoundary(
+                    child: PolygonWaveform(
+                      samples: _samples,
+                      height: size.height * 0.5,
+                      width: size.width * 0.95,
+                      elapsedDuration: _playerPosition,
+                      maxDuration: _audioLength,
+                      activeColor: Colors.greenAccent,
+                    ),
+                  ),
+                  CustomPaint(
+                    key: _paintKey,
+                    size: Size(
+                      size.width * 0.95,
+                      size.height * 0.5,
+                    ),
+                    foregroundPainter: TimeStampPainter(
+                      timeStamps: config.config.beatStamps,
+                      audioLength: _lengthInMillis,
+                      hitOffset: _hitOffset,
+                      hitTimeStamp: _addTimeStampForRemoval,
+                      newTimeStamp: (t) => WidgetsBinding.instance.addPostFrameCallback((_) {
+                        setState(() {
+                          config.config.beatStamps.add(t);
+                          // Sort timestamps.
+                          config.config.beatStamps.sort();
+                        });
+                      }),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                RepaintBoundary(
-                  child: PolygonWaveform(
-                    samples: samples,
-                    height: size.height * 0.5,
-                    width: size.width * 0.95,
-                    elapsedDuration: elapsedDuration,
-                    maxDuration: maxDuration,
-                    activeColor: Colors.greenAccent,
-                  ),
-                ),
-                CustomPaint(
-                  key: _paintKey,
-                  size: Size(
-                    size.width * 0.95,
-                    size.height * 0.5,
-                  ),
-                  foregroundPainter: TimeStampPainter(
-                    timeStamps: config.config.beatStamps,
-                    audioLength: lengthInMillis,
-                    hitOffset: _hitOffset,
-                    hitTimeStamp: _addTimeStampForRemoval,
-                    newTimeStamp: (t) => WidgetsBinding.instance.addPostFrameCallback((_) {
-                      setState(() {
-
-                        config.config.beatStamps.add(t);
-                        // Sort timestamps.
-                        config.config.beatStamps.sort();
-                      });
-                    }),
-                  ),
+                //TODO: Play / pause in a single button..
+                PlayerWidget(player: _player),
+                TextButton(
+                  onPressed: () => _executeTimeStamps(),
+                  style: textButtonStyle(context),
+                  child: const Text('Run analysis'),
                 ),
               ],
             ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              //TODO: Play / pause in a single button..
-              PlayerWidget(player: _player),
-              TextButton(
-                onPressed: () => _executeTimeStamps(),
-                style: textButtonStyle(context),
-                child: const Text('Run analysis'),
-              ),
-            ],
-          ),
-        )
-      ]),
+          )
+        ],
+      ),
     );
   }
 }

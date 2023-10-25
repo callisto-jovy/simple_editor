@@ -15,7 +15,10 @@ class CreateProjectPage extends StatefulWidget {
 }
 
 class _CreateProjectPageState extends State<CreateProjectPage> {
+  /// [TextEditingController] that keeps track of the project name [TextFormField]
   final TextEditingController _projectNameController = TextEditingController();
+
+  /// [TextEditingController] that keeps track of the project' path [TextFormField]
   final TextEditingController _projectPathController = TextEditingController();
 
   @override

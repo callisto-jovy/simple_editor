@@ -43,10 +43,17 @@ class TimeStampPainter extends CustomPainter {
       } else {
         canvas.drawLine(p0, p1, paint);
 
-        final TextSpan span = TextSpan(text: Duration(milliseconds: timeStamp.round()).label());
-        final TextPainter tp = TextPainter(text: span, textDirection: TextDirection.ltr);
-        tp.layout();
-        tp.paint(canvas, p1.translate(-tp.width * 0.5, 0)); // Center text
+        final TextPainter indexTp = TextPainter(
+            text: TextSpan(text: '${timeStamps.indexOf(timeStamp)}'),
+            textDirection: TextDirection.ltr);
+        indexTp.layout();
+        indexTp.paint(canvas, p0.translate(-indexTp.width * 0.5, -indexTp.height));
+
+        final TextPainter stampTp = TextPainter(
+            text: TextSpan(text: Duration(milliseconds: timeStamp.round()).label()),
+            textDirection: TextDirection.ltr);
+        stampTp.layout();
+        stampTp.paint(canvas, p1.translate(-stampTp.width * 0.5, 0)); // Center text
       }
     }
 

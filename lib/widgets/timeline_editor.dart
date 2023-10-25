@@ -4,25 +4,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
 import 'package:path/path.dart' as path;
+import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/extensions/double_extension.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
-import 'package:video_editor/utils/preview_util.dart';
-import 'package:video_editor/widgets/cache_image_provider.dart';
+import 'package:video_editor/widgets/video_clip_container.dart';
 import 'package:wav/wav.dart';
-
-class TimeLineEditor extends StatefulWidget {
-  final StreamController<List<VideoClip>> videoClipController;
-
-  final Function(List<VideoClip>) onReorder;
-  final Function(VideoClip) onStateChanged;
-
-  const TimeLineEditor(
-      {super.key, required this.videoClipController, required this.onReorder, required this.onStateChanged});
-
-  @override
-  State<TimeLineEditor> createState() => _TimeLineEditorState();
-}
 
 class _TimeLineEditorState extends State<TimeLineEditor> {
   /// [ScrollController] for the list vies scroll
@@ -33,7 +20,7 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
   /// Starts to load the audio from the config video path.
   /// Calculates the length in milliseconds, chops the samples & adds them to the [List]
   Future<void> _loadAudio() async {
-    if(config.videoProject.config.audioPath.isEmpty) {
+    if (config.videoProject.config.audioPath.isEmpty) {
       return;
     }
 
@@ -67,73 +54,6 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
     );
   }
 
-  Widget _buildVideoClip(final int index, final VideoClip clip, final Size size) {
-    // Map the millisecond range to the screen size
-    final double width =
-        clip.clipLength.inMilliseconds.toDouble().remap(0, audioLength, 120, size.width / 4);
-
-    // TODO: Remove clip
-    return UnconstrainedBox(
-      key: Key('$index'),
-      child: Container(
-        padding: const EdgeInsets.all(8.0),
-        height: 160,
-        width: width,
-        child: Dismissible(
-          key: Key('$index'),
-          onDismissed: (direction) {
-            setState(() {
-              config.removeClip(clip);
-            });
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: Image(
-                  fit: BoxFit.cover,
-                  filterQuality: FilterQuality.low,
-                  image: CacheImageProvider(
-                    '${clip.timeStamp.start}',
-                    Uint8List.view(clip.timeStamp.startFrame!.buffer),
-                  ),
-                ),
-              ),
-              Container(
-                alignment: Alignment.center,
-                color: Colors.green,
-                child: Text(
-                  '${clip.timeStamp.start.label()} | ${clip.clipLength.inMilliseconds}ms',
-                ),
-              ),
-              InkWell(
-                onTap: () {
-                  setState(() {
-                    clip.audioMuted = !clip.audioMuted;
-
-                    // update the backend
-                    widget.onStateChanged.call(clip);
-                  });
-                },
-                child: Container(
-                  alignment: Alignment.center,
-                  color: clip.audioMuted ? Colors.white24 : Colors.white54,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      clip.audioMuted ? const Icon(Icons.volume_off) : const Icon(Icons.volume_up),
-                      const Text('Audio'),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildTimeline(final List<VideoClip> clips, final Size size) {
     return ReorderableListView.builder(
       itemCount: clips.length,
@@ -141,7 +61,32 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
       scrollDirection: Axis.horizontal,
       scrollController: _timeLineScroll,
       itemBuilder: (context, index) {
-        return _buildVideoClip(index, clips[index], size);
+        final VideoClip videoClip = clips[index];
+        // Map the millisecond range to the screen size
+        final double width = videoClip.clipLength.inMilliseconds
+            .toDouble()
+            .remap(0, audioLength, 120, size.width / 4);
+
+        return VideoClipContainer(
+          key: Key('$index'),
+          index: index,
+          videoClip: videoClip,
+          dismissedCallback: () {
+            setState(() {
+              clips.remove(videoClip);
+              config.config.videoClips.remove(videoClip);
+            });
+          },
+          width: width,
+          onStateChanged: (p0) {
+            setState(() {
+              videoClip.audioMuted = !videoClip.audioMuted;
+
+              // update the backend
+              widget.onStateChanged.call(videoClip);
+            });
+          },
+        );
       },
       onReorder: (int oldIndex, int newIndex) {
         if (oldIndex < newIndex) {
@@ -151,16 +96,19 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
           final VideoClip item = clips.removeAt(oldIndex);
           clips.insert(newIndex, item);
 
+          //TODO: range check
           // TODO: Fix this stupidity.
           // update all the clips.
-          final List<double> beatTimes = config.videoProject.config.timeBetweenBeats();
+          config.videoProject.config.timeBetweenBeats().then((value) {
+            for (int i = 0; i < clips.length; i++) {
+              if (i < value.length) {
+                clips[i].clipLength = Duration(milliseconds: value[i].round());
+              }
+            }
 
-          for (int i = 0; i < clips.length; i++) {
-            clips[i].clipLength = Duration(milliseconds: beatTimes[i].round());
-          }
-
-          // Inform the parent that the clips have been reordered, so the backend can be updates accordingly.
-          widget.onReorder.call(clips);
+            // Inform the parent that the clips have been reordered, so the backend can be updates accordingly.
+            widget.onReorder.call(clips);
+          });
         });
       },
     );
@@ -193,4 +141,20 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
       ],
     );
   }
+}
+
+class TimeLineEditor extends StatefulWidget {
+  final StreamController<List<VideoClip>> videoClipController;
+
+  final Function(List<VideoClip>) onReorder;
+  final Function(VideoClip) onStateChanged;
+
+  const TimeLineEditor(
+      {super.key,
+      required this.videoClipController,
+      required this.onReorder,
+      required this.onStateChanged});
+
+  @override
+  State<TimeLineEditor> createState() => _TimeLineEditorState();
 }

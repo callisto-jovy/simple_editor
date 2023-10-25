@@ -14,7 +14,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  /// [TextEditingController] which controls the project path
+
+  /// [TextEditingController] which controls the project path.
   final TextEditingController _projectPathController =
       TextEditingController(text: config.videoProject.projectPath);
 
