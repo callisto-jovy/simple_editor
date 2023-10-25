@@ -8,8 +8,7 @@ class MediaFileDrop extends StatefulWidget {
   final String fileType;
   final Function(XFile file) fileDropped;
 
-  const MediaFileDrop({Key? key, required this.fileDropped, required this.fileType})
-      : super(key: key);
+  const MediaFileDrop({super.key, required this.fileDropped, required this.fileType});
 
   @override
   State<MediaFileDrop> createState() => _MediaFileDropState();

@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
-import 'package:video_editor/widgets/cache_image_provider.dart';
+import 'package:video_editor/utils/cache_image_provider.dart';
 
 class TimeStampCard extends StatelessWidget {
   final TimeStamp timeStamp;

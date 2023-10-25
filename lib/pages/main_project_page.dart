@@ -1,23 +1,19 @@
 import 'dart:async';
-import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:jni/jni.dart';
-import 'package:local_notifier/local_notifier.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:video_editor/pages/audio_analysis.dart';
 import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/pages/video_player.dart';
 import 'package:video_editor/utils/config.dart' as config;
-import 'package:video_editor/utils/easy_edits_backend.dart';
-import 'package:video_editor/utils/error_util.dart';
+import 'package:video_editor/utils/edit_util.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
 import 'package:video_editor/utils/preview_util.dart' as preview;
-import 'package:video_editor/widgets/cache_image_provider.dart';
+import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/widgets/snackbars.dart';
 import 'package:video_editor/widgets/styles.dart';
 import 'package:video_editor/widgets/time_stamp_widget.dart';
@@ -77,11 +73,12 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     windowManager.addListener(this);
 
     // add the lastest preview path if not empty.
-    if (config.videoProject.config.previewPath.isNotEmpty) {
-      _player.add(Media(config.videoProject.config.previewPath));
+    if (config.config.previewPath.isNotEmpty) {
+      _player.add(Media(config.config.previewPath));
     }
 
     windowManager.setPreventClose(true);
+    _clipController.add(config.config.videoClips);
     setState(() {});
   }
 
@@ -90,50 +87,54 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     windowManager.isPreventClose().then((value) {
       if (value) {
         showDialog(
-            context: context,
-            builder: (_) {
-              return AlertDialog(
-                title: const Text('Are you sure you want to exit?'),
-                actions: [
-                  TextButton(
-                    child: const Text('No'),
-                    onPressed: () {
+          context: context,
+          builder: (_) {
+            return AlertDialog(
+              title: const Text('Are you sure you want to exit?'),
+              actions: [
+                TextButton(
+                  child: const Text('No'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: const Text('Yes'),
+                  onPressed: () {
+                    // Save app state & then close.
+                    config.saveApplicationState().then((value) {
                       Navigator.of(context).pop();
-                    },
-                  ),
-                  TextButton(
-                    child: const Text('Yes'),
-                    onPressed: () {
-                      // Save app state & then close.
-                      config.saveApplicationState().then((value) {
-                        Navigator.of(context).pop();
-                        windowManager.destroy();
-                      });
-                    },
-                  ),
-                ],
-              );
-            });
+                      windowManager.destroy();
+                    });
+                  },
+                ),
+              ],
+            );
+          },
+        );
       }
     });
   }
 
-  /// Pushes the video player page
-  void _navigateToVideo(final BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const VideoPlayer(),
-      ),
-    );
+  void _importProjectFile(final BuildContext context) {
+    _loadFile(() {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Loaded config for ${config.videoProject.projectName}'),
+      ));
+
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const MainProjectPage(), maintainState: true),
+          (Route<dynamic> route) => false);
+    });
   }
 
-  /// Pushes the audio analysis page
-  void _navigateToAudio(final BuildContext context) {
+  /// Pushes a new page
+  void _navigateToPage(final BuildContext context, final StatefulWidget page) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const AudioAnalysis(),
+        builder: (context) => page,
       ),
     );
   }
@@ -176,43 +177,9 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     }
   }
 
-  Future<void> _edit() async {
-    await config.ensureOutExists();
-    //TODO: Make sure that the state is fulfilled.
-    final String json = config.toEditorConfig();
-    // Run the export process in a new isolate
-    await Isolate.run(() => FlutterWrapper.edit(JString.fromString(json))).then((value) {
-      LocalNotification(
-        title: 'Easy Edits',
-        body: 'Done editing.',
-      ).show();
-    }).onError((error, stackTrace) {
-      dumpErrorLog(error, stackTrace);
-
-      LocalNotification(
-        title: 'Easy Edits',
-        body:
-            'An error occurred. The error has been dumped in a logfile. If you decide to open a report, attach this log.',
-      ).show();
-    });
-  }
-
-  Future<void> _exportSegments() async {
-    await config.ensureOutExists();
-    //TODO: Make sure that the state is fulfilled.
-    final String json = config.toEditorConfig();
-    // Run the export process in a new isolate
-    await Isolate.run(() => FlutterWrapper.exportSegments(JString.fromString(json))).then((value) {
-      LocalNotification(
-        title: 'Easy Edits',
-        body: 'Done exporting the segments.',
-      ).show();
-    });
-  }
-
-  void _timeStampDroppedOnTimeline(final TimeStamp timeStamp) {
+  Future<void> _timeStampDroppedOnTimeline(final TimeStamp timeStamp) async {
     // Convert the newly dropped timestamp to a clip
-    final List<double> beatTimes = config.videoProject.config.timeBetweenBeats();
+    final List<double> beatTimes = await config.videoProject.config.timeBetweenBeats();
 
     final int nextIndex = config.videoProject.config.videoClips.length;
 
@@ -232,35 +199,19 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
   List<Widget> appBarTrailing(final BuildContext context) {
     return [
       TextButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const SettingsPage(),
-            ),
-          );
-        },
+        onPressed: () => _navigateToPage(context, const SettingsPage()),
         child: const Text('Settings'),
       ),
       TextButton(
-        onPressed: () => _loadFile(() {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Loaded config for ${config.videoProject.projectName}'),
-          ));
-
-          Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const MainProjectPage(), maintainState: true),
-              (Route<dynamic> route) => false);
-        }),
+        onPressed: () => _importProjectFile(context),
         child: const Text('Import'),
       ),
       TextButton(
-        onPressed: () => _edit(),
+        onPressed: () => edit(),
         child: const Text('Edit'),
       ),
       TextButton(
-        onPressed: () => _exportSegments(),
+        onPressed: () => exportSegments(),
         child: const Text('Export Segments'),
       ),
       TextButton(
@@ -305,7 +256,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
             ),
             const Padding(padding: EdgeInsets.all(5)),
             TextButton(
-              onPressed: () => _navigateToAudio(context),
+              onPressed: () => _navigateToPage(context, const AudioAnalysis()),
               style: textButtonStyle(context),
               child: const Text('Edit'),
             )
@@ -336,7 +287,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
             ),
             const Padding(padding: EdgeInsets.all(5)),
             TextButton(
-              onPressed: () => _navigateToVideo(context),
+              onPressed: () => _navigateToPage(context, const VideoPlayer()),
               style: textButtonStyle(context),
               child: const Text('Edit'),
             ),
@@ -436,8 +387,8 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
               return TimeLineEditor(
                 videoClipController: _clipController,
                 onReorder: config.updateVideoClips,
-                onStateChanged: config.updateVideoClip,
-                // whenever the reordering is done, we generate a new edit preview.
+                onStateChanged: config
+                    .updateVideoClip, // whenever the reordering is done, we generate a new edit preview.
               );
             },
             onAccept: (data) {

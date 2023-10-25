@@ -70,15 +70,16 @@ Future<String> applicationState() async {
 Future<void> handlePreview(final String previewPath) async {
   /// Deletes the previous preview & sets the new path.
   if (config.previewPath.isNotEmpty) {
-    await File(config.previewPath).delete();
+    final File previewFile = File(config.previewPath);
+    previewFile.exists().then((value) => previewFile.delete());
   }
 
   config.previewPath = previewPath;
 }
 
 /// Creates a JSON [String] with all the app's state to pass to the backend.
-String toEditorConfig() {
-  final json = config.editorConfig();
+Future<String> toEditorConfig() async{
+  final json = await config.editorConfig();
   return kEncoder.convert(json);
 }
 
@@ -105,7 +106,7 @@ void createVideoClip(final VideoClip videoClip) {
   generateSinglePreview(videoClip).then((value) => _setClipPath(videoClip, value));
 }
 
-void updateVideoClip(final VideoClip videoClip) {
+Future<void> updateVideoClip(final VideoClip videoClip) async {
   final int indexOfClip = config.videoClips.indexOf(videoClip);
 
   // TODO: handle this
@@ -113,19 +114,26 @@ void updateVideoClip(final VideoClip videoClip) {
     return;
   }
 
-  final VideoClip oldVideoClip = config.videoClips[indexOfClip];
   // update the previous clip; TODO: Instead of replacing, edit the state?
   videoProject.config.videoClips[indexOfClip] = videoClip;
 
-  if (videoClip.clipLength.inMilliseconds != oldVideoClip.clipLength.inMilliseconds) {
-    // Trigger regenerate
-    generateSinglePreview(videoClip).then((value) => _setClipPath(videoClip, value));
+  // Trigger regenerate
+  await generateSinglePreview(videoClip).then((value) => _setClipPath(videoClip, value));
+}
+
+Future<void> updateVideoClips(final List<VideoClip> clips) async {
+  for (final VideoClip element in clips) {
+    await updateVideoClip(element);
   }
 }
 
-void updateVideoClips(final List<VideoClip> clips) {
-  for (final VideoClip element in clips) {
-    updateVideoClip(element);
+Future<void> updateClipTimes() async {
+  final List<double> beatTimes = await config.timeBetweenBeats();
+
+  for (int i = 0; i < beatTimes.length; i++) {
+    if (i < config.videoClips.length) {
+      config.videoClips[i].clipLength = Duration(milliseconds: beatTimes[i].round());
+    }
   }
 }
 
