@@ -53,7 +53,13 @@ void fromJson(final Map<String, dynamic> json) {
 void removeClip(final VideoClip videoClip) {
   // Delete old preview
   if (config.generatedPreviews.containsKey(videoClip.id)) {
-    File(config.generatedPreviews[videoClip.id]!).delete();
+    final File file = File(config.generatedPreviews[videoClip.id]!);
+
+    file.exists().then((value) {
+      if (value) {
+        file.delete();
+      }
+    });
   }
 
   config.generatedPreviews.remove(videoClip.id);
@@ -78,7 +84,7 @@ Future<void> handlePreview(final String previewPath) async {
 }
 
 /// Creates a JSON [String] with all the app's state to pass to the backend.
-Future<String> toEditorConfig() async{
+Future<String> toEditorConfig() async {
   final json = await config.editorConfig();
   return kEncoder.convert(json);
 }

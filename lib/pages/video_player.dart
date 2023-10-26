@@ -23,7 +23,7 @@ class VideoPlayer extends StatefulWidget {
 class _VideoPlayerState extends State<VideoPlayer> {
 
   /// Create a [Player] to control playback.
-  final _player = Player(
+  final Player _player = Player(
     configuration: const PlayerConfiguration(
       title: 'Easy Edits',
       bufferSize: 1024 * 1024 * 1024,
@@ -32,7 +32,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
   );
 
   /// Create a [VideoController] to handle video output from [Player].
-  late final _controller = VideoController(_player);
+  late final VideoController _controller = VideoController(_player);
 
   final ScrollController _scrollController = ScrollController();
   final ScrollController _timeLineScroll = ScrollController();

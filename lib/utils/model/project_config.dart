@@ -74,8 +74,6 @@ class ProjectConfig {
       lastBeat = timeStamp;
     }
 
-    print(lengthInMillis - lastBeat);
-
     timeBetweenBeats.add(lengthInMillis - lastBeat);
 
     return timeBetweenBeats;
@@ -135,7 +133,7 @@ class ProjectConfig {
       'ms_threshold': msThreshold,
       'working_path': config.videoProject.workingDirectory.path,
       'output_path': path.join(
-          config.videoProject.projectPath, '${path.basenameWithoutExtension(videoPath)}.mp4'),
+          config.videoProject.projectPath, '${path.basenameWithoutExtension(videoPath)}.mkv'),
 
       //TODO: Request file picker for filename and path.
       'editor_state': {

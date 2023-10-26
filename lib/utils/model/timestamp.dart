@@ -4,7 +4,8 @@ import 'dart:typed_data';
 import 'package:fast_image_resizer/fast_image_resizer.dart';
 
 class TimeStamp {
-  final Duration start;
+
+  Duration start;
   final ByteData? startFrame;
 
   TimeStamp(this.start, this.startFrame);
