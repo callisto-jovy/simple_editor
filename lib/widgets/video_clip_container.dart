@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
+import 'package:video_editor/pages/clip_adjust_page.dart';
 import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
 
@@ -19,6 +20,10 @@ class VideoClipContainer extends StatelessWidget {
       required this.dismissedCallback,
       required this.width,
       required this.onStateChanged});
+
+  void _handleClipTap(final BuildContext context) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => ClipAdjust(clip: videoClip)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,12 +47,15 @@ class VideoClipContainer extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: Image(
-                  fit: BoxFit.cover,
-                  filterQuality: FilterQuality.low,
-                  image: CacheImageProvider(
-                    '${videoClip.timeStamp.start}',
-                    Uint8List.view(videoClip.timeStamp.startFrame!.buffer),
+                child: InkWell(
+                  onTap: () => _handleClipTap(context),
+                  child: Image(
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.low,
+                    image: CacheImageProvider(
+                      '${videoClip.timeStamp.start}',
+                      Uint8List.view(videoClip.timeStamp.startFrame!.buffer),
+                    ),
                   ),
                 ),
               ),
