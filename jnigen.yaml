@@ -33,6 +33,6 @@ maven_downloads:
   source_deps:
     - 'com.google.code.gson:gson:2.10.1'
     - 'org.bytedeco:javacv-platform:1.5.9'
-    - 'org.bytedeco:ffmpeg-platform:6.0-1.5.9'
+    - 'org.bytedeco:ffmpeg-platform-gpl:6.0-1.5.9'
     - 'commons-io:commons-io:2.13.0'
 

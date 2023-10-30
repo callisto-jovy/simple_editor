@@ -8,12 +8,12 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:video_editor/pages/audio_analysis.dart';
 import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/pages/video_player.dart';
+import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/edit_util.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
 import 'package:video_editor/utils/preview_util.dart' as preview;
-import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/widgets/snackbars.dart';
 import 'package:video_editor/widgets/styles.dart';
 import 'package:video_editor/widgets/time_stamp_widget.dart';
@@ -42,6 +42,8 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
 
   /// [StreamController] which is passed to the [TimeLineEditor] and triggers a refresh.
   final StreamController<List<VideoClip>> _clipController = StreamController();
+
+  final GlobalKey _dragTargetKey = GlobalKey();
 
   /// Create a [Player] to control playback.
   final _player = Player(
@@ -79,6 +81,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
 
     windowManager.setPreventClose(true);
     _clipController.add(config.config.videoClips);
+
     setState(() {});
   }
 
@@ -156,6 +159,8 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     FilePicker.platform.pickFiles(allowMultiple: false, dialogTitle: 'Pick file').then((value) {
       if (value != null) {
         newPath.call(value.files[0].path!);
+
+        setState(() {});
       }
     });
   }
@@ -177,7 +182,14 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     }
   }
 
-  Future<void> _timeStampDroppedOnTimeline(final TimeStamp timeStamp) async {
+  Future<void> _timeStampDroppedOnTimeline(final TimeStamp timeStamp, final Offset offset) async {
+    final RenderBox? renderBox = _dragTargetKey.currentContext?.findRenderObject() as RenderBox?;
+    // TODO: proper error
+    if (renderBox == null) {
+      ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('Could not find render box.'));
+      return;
+    }
+
     // Convert the newly dropped timestamp to a clip
     final List<double> beatTimes = await config.videoProject.config.timeBetweenBeats();
 
@@ -188,7 +200,12 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     }
     final Duration beatLength = Duration(milliseconds: beatTimes[nextIndex].round());
 
-    final VideoClip clip = VideoClip(timeStamp, beatLength);
+    // Translate away from the center.
+    final Offset translatedOffset = renderBox.globalToLocal(offset);
+
+    final VideoClip clip =
+        VideoClip(timeStamp, beatLength, positionOffset: Offset(translatedOffset.dx, 0));
+
     // Pass off to config to generate
     config.createVideoClip(clip);
 
@@ -258,7 +275,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
             TextButton(
               onPressed: () => _navigateToPage(context, const AudioAnalysis()),
               style: textButtonStyle(context),
-              child: const Text('Edit'),
+              child: const Text('Analyse Audio'),
             )
           ],
         ),
@@ -289,7 +306,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
             TextButton(
               onPressed: () => _navigateToPage(context, const VideoPlayer()),
               style: textButtonStyle(context),
-              child: const Text('Edit'),
+              child: const Text('Select Clips'),
             ),
           ],
         ),
@@ -383,6 +400,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
         ),
         Flexible(
           child: DragTarget<TimeStamp>(
+            key: _dragTargetKey,
             builder: (context, candidateData, rejectedData) {
               return TimeLineEditor(
                 videoClipController: _clipController,
@@ -391,8 +409,8 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
                     .updateVideoClip, // whenever the reordering is done, we generate a new edit preview.
               );
             },
-            onAccept: (data) {
-              _timeStampDroppedOnTimeline(data);
+            onAcceptWithDetails: (details) {
+              _timeStampDroppedOnTimeline(details.data, details.offset);
             },
           ),
         ),
