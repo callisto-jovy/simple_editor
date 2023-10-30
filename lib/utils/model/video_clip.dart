@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:video_editor/utils/config.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 
@@ -14,7 +16,18 @@ class VideoClip {
   /// Whether the audio should be muted or not.
   bool audioMuted = true;
 
-  VideoClip(this.timeStamp, this.clipLength) : id = kUuid.v4();
+  //TODO: JSON
+  Offset? positionOffset;
+
+  VideoClip(this.timeStamp, this.clipLength, {this.positionOffset}) : id = kUuid.v4();
+
+  // TODO: from size
+  Rect paintingBounds(final Size size) =>
+      paintingBoundsOffset(positionOffset ?? const Offset(0, 0), size);
+
+  // TODO: from size
+  Rect paintingBoundsOffset(final Offset offset, final Size size) =>
+      Rect.fromCenter(center: offset, width: 120, height: 40);
 
   VideoClip.fromJson(final Map<String, dynamic> json)
       : timeStamp = TimeStamp.fromJson(json['time_stamp']),

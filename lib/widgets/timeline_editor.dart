@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:video_editor/utils/config.dart' as config;
+import 'package:video_editor/utils/extensions/build_context_extension.dart';
 import 'package:video_editor/utils/extensions/double_extension.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
 import 'package:video_editor/widgets/video_clip_container.dart';
+import 'package:video_editor/widgets/video_timeline.dart';
 import 'package:wav/wav.dart';
 
 class _TimeLineEditorState extends State<TimeLineEditor> {
@@ -41,12 +43,15 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
 
   /// Red [Container] to signify the audio.
   Widget _buildAudioContainer() {
-    return Container(
-      height: 25,
-      color: Colors.redAccent,
-      child: Text(
-        path.basenameWithoutExtension(config.videoProject.config.audioPath),
-        textAlign: TextAlign.center,
+    return SingleChildScrollView(
+      child: Container(
+        height: 25,
+        width: audioLength.remap(0, audioLength, 0, context.mediaSize.width),
+        color: Colors.redAccent,
+        child: Text(
+          path.basenameWithoutExtension(config.videoProject.config.audioPath),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -62,7 +67,7 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
         // Map the millisecond range to the screen size
         final double width = videoClip.clipLength.inMilliseconds
             .toDouble()
-            .remap(0, audioLength, 120, size.width / 4);
+            .remap(0, audioLength, 240, size.width / 4);
 
         return VideoClipContainer(
           key: Key('$index'),
@@ -111,29 +116,62 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
     );
   }
 
+  Widget _buildTimeLineReal() {
+    return Column(
+      children: [
+        Flexible(
+          child: GridView(
+            scrollDirection: Axis.horizontal,
+            controller: _timeLineScroll,
+            physics: const RangeMaintainingScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 1, childAspectRatio: 0.36),
+            children: List.generate(
+              50,
+              (index) => UnconstrainedBox(
+                child: Container(
+                  color: Colors.green,
+                  width: 400,
+                  height: 50,
+                  child: Text('item: $index'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAudioLine() {
+    return Container(
+      color: Colors.blueAccent,
+      width: context.mediaSize.width,
+      alignment: Alignment.center,
+      height: 120,
+      child: Text(textAlign: TextAlign.center, 'Audio'),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-
     return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         StreamBuilder(
           stream: widget.videoClipController.stream,
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
-              return Container();
+              return Flexible(child: Container());
             }
-
             return Flexible(
-              child: Scrollbar(
-                controller: _timeLineScroll,
-                child: _buildTimeline(snapshot.data!, size),
+              child: VideoTimeLine(
+                videoClips: snapshot.data!,
               ),
             );
           },
         ),
+        _buildAudioLine(),
         _buildAudioContainer(),
       ],
     );
