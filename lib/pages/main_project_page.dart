@@ -11,6 +11,7 @@ import 'package:video_editor/pages/video_player.dart';
 import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/edit_util.dart';
+import 'package:video_editor/utils/model/audio_clip.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
 import 'package:video_editor/utils/preview_util.dart' as preview;
@@ -41,9 +42,12 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
       TextEditingController(text: config.videoProject.projectName);
 
   /// [StreamController] which is passed to the [TimeLineEditor] and triggers a refresh.
-  final StreamController<List<VideoClip>> _clipController = StreamController();
+  final StreamController<List<VideoClip>> _videoClipController = StreamController();
+
+  final StreamController<List<AudioClip>> _audioClipController = StreamController();
 
   final GlobalKey _dragTargetKey = GlobalKey();
+
 
   /// Create a [Player] to control playback.
   final _player = Player(
@@ -80,7 +84,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     }
 
     windowManager.setPreventClose(true);
-    _clipController.add(config.config.videoClips);
+    _videoClipController.add(config.config.videoClips);
 
     setState(() {});
   }
@@ -200,17 +204,26 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     }
     final Duration beatLength = Duration(milliseconds: beatTimes[nextIndex].round());
 
+
     // Translate away from the center.
     final Offset translatedOffset = renderBox.globalToLocal(offset);
 
-    final VideoClip clip =
-        VideoClip(timeStamp, beatLength, positionOffset: Offset(translatedOffset.dx, 0));
+    final VideoClip videoClip = VideoClip(timeStamp, clipLength: beatLength, positionOffset: translatedOffset);
+    // Constrain the position
+    videoClip.positionOffset = videoClip.constrainPosition(renderBox, translatedOffset);
+
+    final AudioClip audioClip = AudioClip(timeStamp: timeStamp.start, clipLength: beatLength, positionOffset: translatedOffset);
+    audioClip.positionOffset = audioClip.constrainPosition(renderBox, translatedOffset);
 
     // Pass off to config to generate
-    config.createVideoClip(clip);
+    config.createVideoClip(videoClip);
+
+    config.config.audioClips.add(audioClip);
 
     // pass the video projects, notify the projects
-    _clipController.add(config.videoProject.config.videoClips);
+    _videoClipController.add(config.config.videoClips);
+
+    _audioClipController.add(config.config.audioClips);
   }
 
   List<Widget> appBarTrailing(final BuildContext context) {
@@ -403,10 +416,8 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
             key: _dragTargetKey,
             builder: (context, candidateData, rejectedData) {
               return TimeLineEditor(
-                videoClipController: _clipController,
-                onReorder: config.updateVideoClips,
-                onStateChanged: config
-                    .updateVideoClip, // whenever the reordering is done, we generate a new edit preview.
+                videoClipController: _videoClipController,
+                audioClipController: _audioClipController,
               );
             },
             onAcceptWithDetails: (details) {

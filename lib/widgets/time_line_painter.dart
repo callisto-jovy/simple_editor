@@ -11,17 +11,14 @@ class TimeLinePainter<T extends AbstractClip> extends CustomPainter {
 
   @override
   void paint(final Canvas canvas, final Size size) {
-    final paint = Paint()
-      ..color = Colors.red
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.square;
+    final paint = Paint()..color = Colors.redAccent;
+    final paintSelected = Paint()..color = Colors.blue;
 
     for (final T clip in clips) {
       final Rect paintRect = clip.paintingBounds(size);
 
       if (clip == draggingClip) {
-        canvas.drawRect(paintRect, paint..color = Colors.blueGrey);
-        paint.color = Colors.red;
+        canvas.drawRect(paintRect, paintSelected);
       } else {
         canvas.drawRect(paintRect, paint);
       }
@@ -31,6 +28,7 @@ class TimeLinePainter<T extends AbstractClip> extends CustomPainter {
       indexTp.layout();
       indexTp.paint(canvas, paintRect.center.translate(-indexTp.width * 0.5, -indexTp.height / 2));
     }
+
   }
 
   @override

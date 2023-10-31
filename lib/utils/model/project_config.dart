@@ -1,6 +1,7 @@
 import 'package:path/path.dart' as path;
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/easy_edits_backend.dart' as backend;
+import 'package:video_editor/utils/model/audio_clip.dart';
 import 'package:video_editor/utils/model/filter_wrapper.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
@@ -37,6 +38,8 @@ class ProjectConfig {
 
   /// [List] of all the video clips in the editor.
   final List<VideoClip> videoClips = [];
+
+  final List<AudioClip> audioClips = [];
 
   /// [Map] of generated clip previews. Contains the paths to the previews.
   /// Key: a [VideoClip] that a preview was generated for.
