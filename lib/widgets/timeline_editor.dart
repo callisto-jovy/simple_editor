@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
 import 'package:path/path.dart' as path;
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/extensions/build_context_extension.dart';
@@ -165,8 +166,9 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
               return Flexible(child: Container());
             }
             return Flexible(
-              child: VideoTimeLine(
-                videoClips: snapshot.data!,
+              child: TimeLine<VideoClip>(
+                clips: snapshot.data!,
+                labelText: (p0) => p0.timeStamp.start.label(),
               ),
             );
           },

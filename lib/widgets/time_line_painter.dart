@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
-import 'package:video_editor/utils/model/video_clip.dart';
+import 'package:video_editor/utils/model/abstract_clip.dart';
 
-class TimeLinePainter extends CustomPainter {
-  final List<VideoClip> videoClips;
-  final VideoClip? draggingClip;
+class TimeLinePainter<T extends AbstractClip> extends CustomPainter {
+  final List<T> clips;
+  final T? draggingClip;
+  final String Function(T) textFunction;
 
-  TimeLinePainter({super.repaint, required this.draggingClip, required this.videoClips});
+  TimeLinePainter(
+      {super.repaint, required this.draggingClip, required this.clips, required this.textFunction});
 
   @override
   void paint(final Canvas canvas, final Size size) {
@@ -15,17 +16,18 @@ class TimeLinePainter extends CustomPainter {
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.square;
 
-    for (final VideoClip clip in videoClips) {
+    for (final T clip in clips) {
       final Rect paintRect = clip.paintingBounds(size);
 
       if (clip == draggingClip) {
         canvas.drawRect(paintRect, paint..color = Colors.blueGrey);
+        paint.color = Colors.red;
       } else {
         canvas.drawRect(paintRect, paint);
       }
 
-      final TextPainter indexTp = TextPainter(
-          text: TextSpan(text: clip.timeStamp.start.label()), textDirection: TextDirection.ltr);
+      final TextPainter indexTp =
+          TextPainter(text: TextSpan(text: textFunction(clip)), textDirection: TextDirection.ltr);
       indexTp.layout();
       indexTp.paint(canvas, paintRect.center.translate(-indexTp.width * 0.5, -indexTp.height / 2));
     }

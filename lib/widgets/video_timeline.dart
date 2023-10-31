@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:video_editor/utils/extensions/build_context_extension.dart';
-import 'package:video_editor/utils/model/video_clip.dart';
+import 'package:video_editor/utils/model/abstract_clip.dart';
 import 'package:video_editor/widgets/time_line_painter.dart';
 
-class VideoTimeLine extends StatefulWidget {
-  final List<VideoClip> videoClips;
+class TimeLine<T extends AbstractClip> extends StatefulWidget {
+  final List<T> clips;
+  final String Function(T) labelText;
 
-  const VideoTimeLine({super.key, required this.videoClips});
+  const TimeLine({super.key, required this.clips, required this.labelText});
 
   @override
-  State<VideoTimeLine> createState() => _VideoTimeLineState();
+  State<TimeLine<T>> createState() => _TimeLineState<T>();
 }
 
-class _VideoTimeLineState extends State<VideoTimeLine> {
+class _TimeLineState<T extends AbstractClip> extends State<TimeLine<T>> {
   /// [GlobalKey] assigned to the clip painter.
   final GlobalKey _videoTimeLineKey = GlobalKey();
 
-  VideoClip? draggingClip;
+  /// The [T] currently being dragged or null if no dragging is taking place.
+  T? draggingClip;
 
   void _handleDragStart(final PointerDownEvent event) {
     final RenderBox? renderBox = _videoTimeLineKey.currentContext?.findRenderObject() as RenderBox?;
@@ -25,11 +27,10 @@ class _VideoTimeLineState extends State<VideoTimeLine> {
 
     // Find overlap.
 
-    VideoClip? hitClip;
+    T? hitClip;
 
-    for (final VideoClip clip in widget.videoClips) {
-      if (clip.positionOffset != null &&
-          clip.paintingBounds(context.mediaSize).contains(event.localPosition)) {
+    for (final T clip in widget.clips) {
+      if (clip.paintingBounds(context.mediaSize).contains(event.localPosition)) {
         hitClip = clip;
       }
     }
@@ -51,19 +52,8 @@ class _VideoTimeLineState extends State<VideoTimeLine> {
 
     if (renderBox == null) return;
 
-    final Rect draggingRect = draggingClip!.paintingBounds(renderBox.size);
-
-    final Offset mouseOffset = event.localPosition;
-
-    // Elements are translated at their center.
-    // therefore: Offset the center.
-    final double limitX =
-        mouseOffset.dx.clamp(draggingRect.width / 2, renderBox.size.width - draggingRect.width / 2);
-    final double limitY = mouseOffset.dy
-        .clamp(draggingRect.height / 2, renderBox.size.height - draggingRect.height / 2);
-
     // Offset within the bounds.
-    final Offset positionOffset = Offset(limitX, limitY);
+    final Offset positionOffset = draggingClip!.constrainPosition(renderBox, event.localPosition);
 
     /* Collision detection. */
 
@@ -71,10 +61,10 @@ class _VideoTimeLineState extends State<VideoTimeLine> {
         .paintingBoundsOffset(positionOffset, renderBox.size); // simulated new position.
 
     // Check whether the new rect overlaps with any OTHER clips.
-    for (final VideoClip clip in widget.videoClips) {
+    for (final T clip in widget.clips) {
       final Rect clipBounds = clip.paintingBounds(context.mediaSize);
 
-      if (clip != draggingClip && clip.positionOffset != null && clipBounds.overlaps(draggedRect)) {
+      if (clip != draggingClip && clipBounds.overlaps(draggedRect)) {
         return; // Stop. Don't update the position.
       }
     }
@@ -109,8 +99,8 @@ class _VideoTimeLineState extends State<VideoTimeLine> {
       child: CustomPaint(
           key: _videoTimeLineKey,
           size: Size.infinite,
-          foregroundPainter:
-              TimeLinePainter(videoClips: widget.videoClips, draggingClip: draggingClip),
+          painter: TimeLinePainter<T>(
+              clips: widget.clips, draggingClip: draggingClip, textFunction: widget.labelText),
           child: const Placeholder()),
     );
   }
