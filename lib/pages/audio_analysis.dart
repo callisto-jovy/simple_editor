@@ -115,9 +115,6 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
     super.dispose();
     _playerPositionStream.cancel();
     _player.dispose();
-
-    // update all video clips...
-    config.updateClipTimes();
   }
 
   @override

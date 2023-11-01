@@ -1,10 +1,8 @@
 import 'package:path/path.dart' as path;
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/easy_edits_backend.dart' as backend;
-import 'package:video_editor/utils/model/audio_clip.dart';
 import 'package:video_editor/utils/model/filter_wrapper.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
-import 'package:video_editor/utils/model/video_clip.dart';
 import 'package:wav/wav_file.dart';
 
 class ProjectConfig {
@@ -36,11 +34,6 @@ class ProjectConfig {
   /// This list is transformed into the differences between the timestamps.
   final List<double> beatStamps = [];
 
-  /// [List] of all the video clips in the editor.
-  final List<VideoClip> videoClips = [];
-
-  final List<AudioClip> audioClips = [];
-
   /// [Map] of generated clip previews. Contains the paths to the previews.
   /// Key: a [VideoClip] that a preview was generated for.
   /// Value: the path to the generated preview.
@@ -70,7 +63,7 @@ class ProjectConfig {
     // this is the time one beat lasts.
     double lastBeat = 0;
 
-    for(int i = 0; i < beatStamps.length - 1; i++) {
+    for (int i = 0; i < beatStamps.length - 1; i++) {
       final double timeStamp = beatStamps[i];
       final double diff = timeStamp - lastBeat;
       timeBetweenBeats.add(diff);
@@ -85,7 +78,6 @@ class ProjectConfig {
   ProjectConfig.fromJson(final Map<String, dynamic> json) {
     /// Clear all the lists beforehand if the user loads another project.
     timeStamps.clear();
-    videoClips.clear();
     beatStamps.clear();
 
     videoPath = json['source_video'];
@@ -105,7 +97,6 @@ class ProjectConfig {
         element.enabled = v['enabled'];
       }),
     );
-    json['video_clips'].forEach((v) => videoClips.add(VideoClip.fromJson(v)));
   }
 
   Map<String, dynamic> toJson() => {
@@ -118,7 +109,6 @@ class ProjectConfig {
         'intro_end': introEnd == null ? -1 : introEnd!.inMicroseconds,
         'time_stamps': timeStamps,
         'beat_times': beatStamps,
-        'video_clips': videoClips,
         'editing_flags': editingOptions,
         'clip_previews': generatedPreviews,
         'filters': filters.toList(),
@@ -142,60 +132,21 @@ class ProjectConfig {
       'editor_state': {
         'intro_start': introStart == null ? -1 : introStart!.inMicroseconds,
         'intro_end': introEnd == null ? -1 : introEnd!.inMicroseconds,
-        'video_clips': videoClips.isEmpty
-            ? timeStamps
-                .asMap()
-                .map((key, value) => MapEntry(key, {
-                      'time_stamp': value.start.inMicroseconds,
-                      'mute_audio': true,
-                      'clip_length': beatTimes[key] // TODO: Figure out, whether this works.
-                    }))
-                .values
-                .toList()
-            : videoClips
-                .map((e) => {
-                      'time_stamp': e.timeStamp.start.inMicroseconds,
-                      'mute_audio': e.audioMuted,
-                      'clip_length': e.clipLength.inMilliseconds
-                    })
-                .toList(), // NOTE:: breaking change for older backend versions.
+        'video_clips': timeStamps
+            .asMap()
+            .map((key, value) => MapEntry(key, {
+                  'time_stamp': value.start.inMicroseconds,
+                  'mute_audio': true,
+                  'clip_length': beatTimes[key] // TODO: Figure out, whether this works.
+                }))
+            .values
+            .toList(),
         'editing_flags': editingOptions,
         'filters': filters
             .where((element) => element.enabled)
             .map((e) => {'name': e.name, 'values': e.values})
             .toList(),
       },
-    };
-  }
-
-  Map<String, dynamic> previewJson(final VideoClip clip) {
-    return {
-      'source_video': videoPath,
-      'working_path': config.videoProject.workingDirectory.path,
-      'clip': {
-        'time_stamp': clip.timeStamp.start.inMicroseconds,
-        'mute_audio': clip.audioMuted,
-        'clip_length': clip.clipLength.inMilliseconds
-      },
-      'filters': filters
-          .where((element) => element.enabled)
-          .map((e) => {'name': e.name, 'values': e.values})
-          .toList(),
-      'editing_flags': editingOptions,
-    };
-  }
-
-  Map<String, dynamic> previewEdit(final List<String> previewPaths) {
-    return {
-      'source_video': videoPath,
-      'source_audio': audioPath,
-      'working_path': config.videoProject.workingDirectory.path,
-      'filters': filters
-          .where((element) => element.enabled)
-          .map((e) => {'name': e.name, 'values': e.values})
-          .toList(),
-      'editing_flags': editingOptions,
-      'previews': previewPaths,
     };
   }
 }

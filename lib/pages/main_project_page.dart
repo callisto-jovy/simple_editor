@@ -1,24 +1,17 @@
-import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:media_kit/media_kit.dart';
-import 'package:media_kit_video/media_kit_video.dart';
 import 'package:video_editor/pages/audio_analysis.dart';
 import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/pages/video_player.dart';
 import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/edit_util.dart';
-import 'package:video_editor/utils/model/audio_clip.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
-import 'package:video_editor/utils/model/video_clip.dart';
-import 'package:video_editor/utils/preview_util.dart' as preview;
 import 'package:video_editor/widgets/snackbars.dart';
 import 'package:video_editor/widgets/styles.dart';
 import 'package:video_editor/widgets/time_stamp_widget.dart';
-import 'package:video_editor/widgets/timeline_editor.dart';
 import 'package:window_manager/window_manager.dart';
 
 class MainProjectPage extends StatefulWidget {
@@ -41,25 +34,6 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
   final TextEditingController _projectNameController =
       TextEditingController(text: config.videoProject.projectName);
 
-  /// [StreamController] which is passed to the [TimeLineEditor] and triggers a refresh.
-  final StreamController<List<VideoClip>> _videoClipController = StreamController();
-
-  final StreamController<List<AudioClip>> _audioClipController = StreamController();
-
-  final GlobalKey _dragTargetKey = GlobalKey();
-
-
-  /// Create a [Player] to control playback.
-  final _player = Player(
-    configuration: const PlayerConfiguration(
-      title: 'Easy Edits',
-      bufferSize: 1024 * 1024 * 1024,
-      libass: true,
-    ),
-  );
-
-  /// Create a [VideoController] to handle video output from [Player].
-  late final _controller = VideoController(_player);
 
   @override
   void dispose() {
@@ -67,7 +41,6 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     _videoPathController.dispose();
     _audioPathController.dispose();
     _projectNameController.dispose();
-    _player.dispose();
     // Remove the window manager listener
     windowManager.removeListener(this);
   }
@@ -78,13 +51,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     // Add a new listener for the window closing.
     windowManager.addListener(this);
 
-    // add the lastest preview path if not empty.
-    if (config.config.previewPath.isNotEmpty) {
-      _player.add(Media(config.config.previewPath));
-    }
-
     windowManager.setPreventClose(true);
-    _videoClipController.add(config.config.videoClips);
 
     setState(() {});
   }
@@ -146,18 +113,6 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     );
   }
 
-  void _generatePreview(final BuildContext buildContext) {
-    ScaffoldMessenger.of(context).showSnackBar(successSnackbar('Generating preview...'));
-    preview.generateEditPreview().then(_playPreview);
-  }
-
-  /// Play the edited preview
-  void _playPreview(final String previewPath) {
-    _player.stop();
-    // set the path in the config, thereby delete the old preview
-    config.handlePreview(previewPath).then((value) => _player.open(Media(previewPath)));
-  }
-
   ///
   void _importFile(final Function(String) newPath) {
     FilePicker.platform.pickFiles(allowMultiple: false, dialogTitle: 'Pick file').then((value) {
@@ -184,46 +139,6 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
       config.importFile(path: result.files[0].path);
       callback.call();
     }
-  }
-
-  Future<void> _timeStampDroppedOnTimeline(final TimeStamp timeStamp, final Offset offset) async {
-    final RenderBox? renderBox = _dragTargetKey.currentContext?.findRenderObject() as RenderBox?;
-    // TODO: proper error
-    if (renderBox == null) {
-      ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('Could not find render box.'));
-      return;
-    }
-
-    // Convert the newly dropped timestamp to a clip
-    final List<double> beatTimes = await config.videoProject.config.timeBetweenBeats();
-
-    final int nextIndex = config.videoProject.config.videoClips.length;
-
-    if (nextIndex >= beatTimes.length) {
-      return;
-    }
-    final Duration beatLength = Duration(milliseconds: beatTimes[nextIndex].round());
-
-
-    // Translate away from the center.
-    final Offset translatedOffset = renderBox.globalToLocal(offset);
-
-    final VideoClip videoClip = VideoClip(timeStamp, clipLength: beatLength, positionOffset: translatedOffset);
-    // Constrain the position
-    videoClip.positionOffset = videoClip.constrainPosition(renderBox, translatedOffset);
-
-    final AudioClip audioClip = AudioClip(timeStamp: timeStamp.start, clipLength: beatLength, positionOffset: translatedOffset);
-    audioClip.positionOffset = audioClip.constrainPosition(renderBox, translatedOffset);
-
-    // Pass off to config to generate
-    config.createVideoClip(videoClip);
-
-    config.config.audioClips.add(audioClip);
-
-    // pass the video projects, notify the projects
-    _videoClipController.add(config.config.videoClips);
-
-    _audioClipController.add(config.config.audioClips);
   }
 
   List<Widget> appBarTrailing(final BuildContext context) {
@@ -384,51 +299,6 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     );
   }
 
-  Widget _buildEditColumn(final BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-    return Column(
-      children: [
-        MaterialDesktopVideoControlsTheme(
-          normal: MaterialDesktopVideoControlsThemeData(topButtonBar: [
-            IconButton(
-              tooltip: 'Preview edit.',
-              onPressed: () => _generatePreview(context),
-              icon: const Icon(Icons.preview),
-            ),
-          ]),
-          fullscreen: const MaterialDesktopVideoControlsThemeData(
-            displaySeekBar: true,
-            automaticallyImplySkipNextButton: false,
-            automaticallyImplySkipPreviousButton: false,
-            //
-          ),
-          child: SizedBox(
-            width: size.width,
-            height: (size.height) * 9.0 / 16.0,
-            child: Video(
-              controller: _controller,
-              wakelock: true,
-            ),
-          ),
-        ),
-        Flexible(
-          child: DragTarget<TimeStamp>(
-            key: _dragTargetKey,
-            builder: (context, candidateData, rejectedData) {
-              return TimeLineEditor(
-                videoClipController: _videoClipController,
-                audioClipController: _audioClipController,
-              );
-            },
-            onAcceptWithDetails: (details) {
-              _timeStampDroppedOnTimeline(details.data, details.offset);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
@@ -446,9 +316,6 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
             width: size.width * 0.25,
             height: size.height,
             child: _buildAudioAndClipsColumn(context),
-          ),
-          Expanded(
-            child: _buildEditColumn(context),
           ),
         ],
       ),

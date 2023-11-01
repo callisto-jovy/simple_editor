@@ -7,8 +7,6 @@ import 'package:uuid/uuid.dart';
 import 'package:video_editor/utils/config_util.dart';
 import 'package:video_editor/utils/model/project.dart';
 import 'package:video_editor/utils/model/project_config.dart';
-import 'package:video_editor/utils/model/video_clip.dart';
-import 'package:video_editor/utils/preview_util.dart';
 
 /// The applications [Uuid]
 const Uuid kUuid = Uuid();
@@ -50,22 +48,6 @@ void fromJson(final Map<String, dynamic> json) {
   videoProject = VideoProject.fromJson(json);
 }
 
-void removeClip(final VideoClip videoClip) {
-  // Delete old preview
-  if (config.generatedPreviews.containsKey(videoClip.id)) {
-    final File file = File(config.generatedPreviews[videoClip.id]!);
-
-    file.exists().then((value) {
-      if (value) {
-        file.delete();
-      }
-    });
-  }
-
-  config.generatedPreviews.remove(videoClip.id);
-  config.videoClips.remove(videoClip);
-}
-
 Future<String> applicationState() async {
   final PackageInfo packageInfo = await PackageInfo.fromPlatform();
   final json = videoProject.toJson(packageInfo.version);
@@ -87,60 +69,6 @@ Future<void> handlePreview(final String previewPath) async {
 Future<String> toEditorConfig() async {
   final json = await config.editorConfig();
   return kEncoder.convert(json);
-}
-
-String previewSegmentJson(final VideoClip videoClip) {
-  final json = config.previewJson(videoClip);
-  return kEncoder.convert(json);
-}
-
-String previewJson(final List<String> previews) {
-  final json = config.previewEdit(previews);
-  return kEncoder.convert(json);
-}
-
-void _setClipPath(final VideoClip videoClip, final String path) {
-  config.generatedPreviews[videoClip.id] = path;
-}
-
-void createVideoClip(final VideoClip videoClip) {
-  // add to the global list
-  config.videoClips.add(videoClip);
-
-  // Generate a preview of the clip. after that's finished, generate the edit preview.
-
-  generateSinglePreview(videoClip).then((value) => _setClipPath(videoClip, value));
-}
-
-Future<void> updateVideoClip(final VideoClip videoClip) async {
-  final int indexOfClip = config.videoClips.indexOf(videoClip);
-
-  // TODO: handle this
-  if (indexOfClip == -1) {
-    return;
-  }
-
-  // update the previous clip; TODO: Instead of replacing, edit the state?
-  videoProject.config.videoClips[indexOfClip] = videoClip;
-
-  // Trigger regenerate
-  await generateSinglePreview(videoClip).then((value) => _setClipPath(videoClip, value));
-}
-
-Future<void> updateVideoClips(final List<VideoClip> clips) async {
-  for (final VideoClip element in clips) {
-    await updateVideoClip(element);
-  }
-}
-
-Future<void> updateClipTimes() async {
-  final List<double> beatTimes = await config.timeBetweenBeats();
-
-  for (int i = 0; i < beatTimes.length; i++) {
-    if (i < config.videoClips.length) {
-      config.videoClips[i].clipLength = Duration(milliseconds: beatTimes[i].round());
-    }
-  }
 }
 
 Future<void> saveApplicationState() async {
