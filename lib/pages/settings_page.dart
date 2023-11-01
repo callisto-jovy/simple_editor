@@ -15,13 +15,8 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
 
-  /// [TextEditingController] which controls the project path.
-  final TextEditingController _projectPathController =
-      TextEditingController(text: config.videoProject.projectPath);
-
   @override
   void dispose() {
-    _projectPathController.dispose();
     super.dispose();
   }
 
@@ -34,37 +29,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildProjectPathRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Flexible(
-          child: TextFormField(
-            controller: _projectPathController,
-            decoration: const InputDecoration(
-              labelText: 'Project path',
-            ),
-          ),
-        ),
-        const Padding(padding: EdgeInsets.all(10)),
-        IconButton(
-          onPressed: () => _selectProjectPath(),
-          icon: const Icon(Icons.file_open),
-          style: iconButtonStyle(context),
-        ),
-      ],
-    );
-  }
-
-  void _selectProjectPath() {
-    FilePicker.platform.getDirectoryPath(dialogTitle: 'Select project path.').then((value) {
-      if (value != null) {
-        config.videoProject.projectPath = value;
-        _projectPathController.text = value;
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,49 +36,39 @@ class _SettingsPageState extends State<SettingsPage> {
         title: const Text('Settings'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: SizedBox(width: 810, child: _buildProjectPathRow()),
-          ),
-          Expanded(
-            child: SettingsList(
-              sections: [
-                SettingsSection(
-                  title: const Text('Flags'),
-                  tiles: config.videoProject.config.editingOptions
-                      .map(
-                        (key, value) => MapEntry(
-                          key,
-                          SettingsTile.switchTile(
-                            onToggle: (value) {
-                              setState(() {
-                                config.videoProject.config.editingOptions[key] = value;
-                              });
-                            },
-                            initialValue: value,
-                            leading: const Icon(Icons.flag),
-                            title: Text(key.replaceAll('_', ' ').toLowerCase()),
-                          ),
-                        ),
-                      )
-                      .values
-                      .toList(),
-                ),
-                SettingsSection(
-                  title: const Text('Filters'),
-                  tiles: config.videoProject.config.filters.map((e) {
-                    return SettingsTile.navigation(
-                      onPressed: (context) => toFilterPage(context, e),
-                      leading: const Icon(Icons.filter),
-                      title: Text(e.displayName),
-                    );
-                  }).toList(),
+      body: SettingsList(
+        sections: [
+          SettingsSection(
+            title: const Text('Flags'),
+            tiles: config.videoProject.config.editingOptions
+                .map(
+                  (key, value) => MapEntry(
+                    key,
+                    SettingsTile.switchTile(
+                      onToggle: (value) {
+                        setState(() {
+                          config.videoProject.config.editingOptions[key] = value;
+                        });
+                      },
+                      initialValue: value,
+                      leading: const Icon(Icons.flag),
+                      title: Text(key.replaceAll('_', ' ').toLowerCase()),
+                    ),
+                  ),
                 )
-              ],
-            ),
+                .values
+                .toList(),
           ),
+          SettingsSection(
+            title: const Text('Filters'),
+            tiles: config.videoProject.config.filters.map((e) {
+              return SettingsTile.navigation(
+                onPressed: (context) => toFilterPage(context, e),
+                leading: const Icon(Icons.filter),
+                title: Text(e.displayName),
+              );
+            }).toList(),
+          )
         ],
       ),
     );

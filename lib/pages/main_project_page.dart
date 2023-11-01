@@ -8,6 +8,7 @@ import 'package:video_editor/pages/video_player.dart';
 import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/edit_util.dart';
+import 'package:video_editor/utils/extensions/build_context_extension.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/widgets/snackbars.dart';
 import 'package:video_editor/widgets/styles.dart';
@@ -34,6 +35,9 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
   final TextEditingController _projectNameController =
       TextEditingController(text: config.videoProject.projectName);
 
+  /// [TextEditingController] which controls the project path.
+  final TextEditingController _projectPathController =
+      TextEditingController(text: config.videoProject.projectPath);
 
   @override
   void dispose() {
@@ -41,6 +45,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     _videoPathController.dispose();
     _audioPathController.dispose();
     _projectNameController.dispose();
+    _projectPathController.dispose();
     // Remove the window manager listener
     windowManager.removeListener(this);
   }
@@ -86,6 +91,15 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
             );
           },
         );
+      }
+    });
+  }
+
+  void _selectProjectPath() {
+    FilePicker.platform.getDirectoryPath(dialogTitle: 'Select project path.').then((value) {
+      if (value != null) {
+        config.videoProject.projectPath = value;
+        _projectPathController.text = value;
       }
     });
   }
@@ -152,12 +166,8 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
         child: const Text('Import'),
       ),
       TextButton(
-        onPressed: () => edit(),
-        child: const Text('Edit'),
-      ),
-      TextButton(
         onPressed: () => exportSegments(),
-        child: const Text('Export Segments'),
+        child: const Text('Export'),
       ),
       TextButton(
         onPressed: () => _saveProject(context),
@@ -288,21 +298,51 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     );
   }
 
-  /// [Column] with the audio column, the video column and the video clips
-  Widget _buildAudioAndClipsColumn(final BuildContext context) {
-    return Column(
+  Widget _buildProjectPathRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildAudioColumn(context),
-        _buildVideoColumn(context),
-        _buildClipsColumn(context),
+        Flexible(
+          child: TextFormField(
+            controller: _projectPathController,
+            decoration: const InputDecoration(
+              labelText: 'Project path',
+            ),
+          ),
+        ),
+        const Padding(padding: EdgeInsets.all(10)),
+        IconButton(
+          onPressed: () => _selectProjectPath(),
+          icon: const Icon(Icons.file_open),
+          style: iconButtonStyle(context),
+        ),
       ],
+    );
+  }
+
+  Widget _buildProjectColumn() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          children: [
+            EditableText(
+              style: Theme.of(context).textTheme.headlineSmall!,
+              controller: _projectNameController,
+              focusNode: FocusNode(),
+              cursorColor: Colors.blueGrey,
+              backgroundCursorColor: Colors.white,
+              onChanged: (value) => config.videoProject.projectName = value,
+            ),
+            _buildProjectPathRow(),
+          ],
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -310,14 +350,21 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
         title: _buildProjectName(),
         actions: appBarTrailing(context),
       ),
-      body: Row(
-        children: [
-          SizedBox(
-            width: size.width * 0.25,
-            height: size.height,
-            child: _buildAudioAndClipsColumn(context),
+      body: Center(
+        child: SizedBox(
+          width: 450,
+          height: context.mediaSize.height * 0.9,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildProjectColumn(),
+              _buildAudioColumn(context),
+              _buildVideoColumn(context),
+              _buildClipsColumn(context),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
