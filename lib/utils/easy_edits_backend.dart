@@ -168,7 +168,7 @@ class FlutterWrapper_FlutterFilterWrapper extends jni.JObject {
     jni.JString string1,
     jni.JString string2,
     jni.JString string3,
-    FilterType filterType,
+    jni.JObject filterType,
     jni.JList<FilterValue> list,
   ) {
     return FlutterWrapper_FlutterFilterWrapper.fromRef(_new0(
@@ -237,8 +237,8 @@ class FlutterWrapper_FlutterFilterWrapper extends jni.JObject {
 
   /// from: public de.yugata.easy.edits.filter.FilterType getFilterType()
   /// The returned object must be released after use, by calling the [release] method.
-  FilterType getFilterType() {
-    return const $FilterTypeType().fromRef(_getFilterType(reference).object);
+  jni.JObject getFilterType() {
+    return const jni.JObjectType().fromRef(_getFilterType(reference).object);
   }
 
   static final _getValues = jniLookup<
@@ -326,6 +326,45 @@ class FlutterWrapper extends jni.JObject {
   static jni.JMap<jni.JString, jni.JString> getEditingFlags() {
     return const jni.JMapType(jni.JStringType(), jni.JStringType())
         .fromRef(_getEditingFlags().object);
+  }
+
+  static final _initFrameExport = jniLookup<
+          ffi.NativeFunction<
+              jni.JniResult Function(ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<ffi.Void>)>>("FlutterWrapper__initFrameExport")
+      .asFunction<
+          jni.JniResult Function(
+              ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  /// from: static public void initFrameExport(java.lang.String string, java.lang.String string1)
+  static void initFrameExport(
+    jni.JString string,
+    jni.JString string1,
+  ) {
+    return _initFrameExport(string.reference, string1.reference).check();
+  }
+
+  static final _stopFrameExport =
+      jniLookup<ffi.NativeFunction<jni.JniResult Function()>>(
+              "FlutterWrapper__stopFrameExport")
+          .asFunction<jni.JniResult Function()>();
+
+  /// from: static public void stopFrameExport()
+  static void stopFrameExport() {
+    return _stopFrameExport().check();
+  }
+
+  static final _getFrame =
+      jniLookup<ffi.NativeFunction<jni.JniResult Function(ffi.Int64)>>(
+              "FlutterWrapper__getFrame")
+          .asFunction<jni.JniResult Function(int)>();
+
+  /// from: static public java.nio.ByteBuffer getFrame(long j)
+  /// The returned object must be released after use, by calling the [release] method.
+  static jni.JByteBuffer getFrame(
+    int j,
+  ) {
+    return const jni.JByteBufferType().fromRef(_getFrame(j).object);
   }
 
   static final _exportSegments = jniLookup<
@@ -502,81 +541,70 @@ final class $FilterValueType extends jni.JObjType<FilterValue> {
   }
 }
 
-/// from: de.yugata.easy.edits.filter.FilterType
-class FilterType extends jni.JObject {
+/// from: de.yugata.easy.edits.editor.video.FrameExporter
+class FrameExporter extends jni.JObject {
   @override
-  late final jni.JObjType<FilterType> $type = type;
+  late final jni.JObjType<FrameExporter> $type = type;
 
-  FilterType.fromRef(
+  FrameExporter.fromRef(
     jni.JObjectPtr ref,
   ) : super.fromRef(ref);
 
   /// The type which includes information such as the signature of this class.
-  static const type = $FilterTypeType();
-  static final _get_VIDEO =
-      jniLookup<ffi.NativeFunction<jni.JniResult Function()>>(
-              "get_FilterType__VIDEO")
-          .asFunction<jni.JniResult Function()>();
+  static const type = $FrameExporterType();
+  static final _new0 = jniLookup<
+          ffi.NativeFunction<
+              jni.JniResult Function(ffi.Pointer<ffi.Void>,
+                  ffi.Pointer<ffi.Void>)>>("FrameExporter__new0")
+      .asFunction<
+          jni.JniResult Function(
+              ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
 
-  /// from: static public final de.yugata.easy.edits.filter.FilterType VIDEO
+  /// from: public void <init>(java.lang.String string, java.lang.String string1)
   /// The returned object must be released after use, by calling the [release] method.
-  static FilterType get VIDEO =>
-      const $FilterTypeType().fromRef(_get_VIDEO().object);
-
-  static final _get_AUDIO =
-      jniLookup<ffi.NativeFunction<jni.JniResult Function()>>(
-              "get_FilterType__AUDIO")
-          .asFunction<jni.JniResult Function()>();
-
-  /// from: static public final de.yugata.easy.edits.filter.FilterType AUDIO
-  /// The returned object must be released after use, by calling the [release] method.
-  static FilterType get AUDIO =>
-      const $FilterTypeType().fromRef(_get_AUDIO().object);
-
-  static final _get_TRANSITION =
-      jniLookup<ffi.NativeFunction<jni.JniResult Function()>>(
-              "get_FilterType__TRANSITION")
-          .asFunction<jni.JniResult Function()>();
-
-  /// from: static public final de.yugata.easy.edits.filter.FilterType TRANSITION
-  /// The returned object must be released after use, by calling the [release] method.
-  static FilterType get TRANSITION =>
-      const $FilterTypeType().fromRef(_get_TRANSITION().object);
-
-  static final _values =
-      jniLookup<ffi.NativeFunction<jni.JniResult Function()>>(
-              "FilterType__values")
-          .asFunction<jni.JniResult Function()>();
-
-  /// from: static public de.yugata.easy.edits.filter.FilterType[] values()
-  /// The returned object must be released after use, by calling the [release] method.
-  static jni.JArray<FilterType> values() {
-    return const jni.JArrayType($FilterTypeType()).fromRef(_values().object);
+  factory FrameExporter(
+    jni.JString string,
+    jni.JString string1,
+  ) {
+    return FrameExporter.fromRef(
+        _new0(string.reference, string1.reference).object);
   }
 
-  static final _valueOf = jniLookup<
+  static final _destroyGrabber = jniLookup<
               ffi
               .NativeFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>>(
-          "FilterType__valueOf")
+          "FrameExporter__destroyGrabber")
       .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>)>();
 
-  /// from: static public de.yugata.easy.edits.filter.FilterType valueOf(java.lang.String string)
+  /// from: public void destroyGrabber()
+  void destroyGrabber() {
+    return _destroyGrabber(reference).check();
+  }
+
+  static final _exportFrame = jniLookup<
+          ffi.NativeFunction<
+              jni.JniResult Function(ffi.Pointer<ffi.Void>,
+                  ffi.Int64)>>("FrameExporter__exportFrame")
+      .asFunction<jni.JniResult Function(ffi.Pointer<ffi.Void>, int)>();
+
+  /// from: public java.nio.ByteBuffer exportFrame(long j)
   /// The returned object must be released after use, by calling the [release] method.
-  static FilterType valueOf(
-    jni.JString string,
+  jni.JByteBuffer exportFrame(
+    int j,
   ) {
-    return const $FilterTypeType().fromRef(_valueOf(string.reference).object);
+    return const jni.JByteBufferType()
+        .fromRef(_exportFrame(reference, j).object);
   }
 }
 
-final class $FilterTypeType extends jni.JObjType<FilterType> {
-  const $FilterTypeType();
+final class $FrameExporterType extends jni.JObjType<FrameExporter> {
+  const $FrameExporterType();
 
   @override
-  String get signature => r"Lde/yugata/easy/edits/filter/FilterType;";
+  String get signature => r"Lde/yugata/easy/edits/editor/video/FrameExporter;";
 
   @override
-  FilterType fromRef(jni.JObjectPtr ref) => FilterType.fromRef(ref);
+  FrameExporter fromRef(jni.JObjectPtr ref) => FrameExporter.fromRef(ref);
 
   @override
   jni.JObjType get superType => const jni.JObjectType();
@@ -585,10 +613,11 @@ final class $FilterTypeType extends jni.JObjType<FilterType> {
   final superCount = 1;
 
   @override
-  int get hashCode => ($FilterTypeType).hashCode;
+  int get hashCode => ($FrameExporterType).hashCode;
 
   @override
   bool operator ==(Object other) {
-    return other.runtimeType == ($FilterTypeType) && other is $FilterTypeType;
+    return other.runtimeType == ($FrameExporterType) &&
+        other is $FrameExporterType;
   }
 }

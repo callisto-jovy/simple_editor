@@ -2,9 +2,9 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:video_editor/pages/audio_analysis.dart';
+import 'package:video_editor/pages/audio_analysis_page.dart';
 import 'package:video_editor/pages/settings_page.dart';
-import 'package:video_editor/pages/video_player.dart';
+import 'package:video_editor/pages/clip_selection_page.dart';
 import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/edit_util.dart';

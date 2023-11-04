@@ -6,10 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
+import 'package:video_editor/pages/clip_adjust_page.dart';
 import 'package:video_editor/pages/settings_page.dart';
+import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/model/timestamp.dart';
-import 'package:video_editor/utils/cache_image_provider.dart';
+import 'package:video_editor/utils/model/video_clip.dart';
 import 'package:video_editor/widgets/custom_video_controls.dart' as custom_controls;
 
 class VideoPlayer extends StatefulWidget {
@@ -19,9 +21,7 @@ class VideoPlayer extends StatefulWidget {
   State<VideoPlayer> createState() => _VideoPlayerState();
 }
 
-
 class _VideoPlayerState extends State<VideoPlayer> {
-
   /// Create a [Player] to control playback.
   final Player _player = Player(
     configuration: const PlayerConfiguration(
@@ -38,7 +38,6 @@ class _VideoPlayerState extends State<VideoPlayer> {
   final ScrollController _timeLineScroll = ScrollController();
 
   final List<TimeStamp> timeStamps = [];
-  Duration? introStart, introEnd;
 
   Future<void> _loadTimeStamps() async {
     for (final TimeStamp stamp in config.videoProject.config.timeStamps) {
@@ -68,13 +67,23 @@ class _VideoPlayerState extends State<VideoPlayer> {
   void dispose() {
     config.videoProject.config.timeStamps.clear();
     config.videoProject.config.timeStamps.addAll(timeStamps);
-    config.videoProject.config.introStart = introStart;
-    config.videoProject.config.introEnd = introEnd;
     _player.dispose();
     _scrollController.dispose();
     _timeLineScroll.dispose();
     super.dispose();
+  }
 
+  void _adjustClip(final int index) {
+    _player.pause();
+
+    final VideoClip clip = VideoClip(timeStamps[index],
+        clipLength: Duration(milliseconds: config.config.beatStamps[index].round()));
+
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => ClipAdjust(
+        videoClip: clip,
+      ),
+    ));
   }
 
   Widget _buildVideo(BuildContext context) {
@@ -86,8 +95,6 @@ class _VideoPlayerState extends State<VideoPlayer> {
         normal: custom_controls.CustomMaterialDesktopVideoControlsThemeData(
           seekBar: custom_controls.CustomMaterialDesktopSeekBar(
             timeStamps: timeStamps.map((e) => e.start).toList(), //TODO: better solution
-            introStart: introStart,
-            introEnd: introEnd,
           ),
           keyboardShortcuts: {
             const SingleActivator(LogicalKeyboardKey.mediaPlay): () => _player.play(),
@@ -212,12 +219,15 @@ class _VideoPlayerState extends State<VideoPlayer> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Image(
-                            fit: BoxFit.cover,
-                            filterQuality: FilterQuality.low,
-                            image: CacheImageProvider(
-                              '${stamp.start}',
-                              Uint8List.view(stamp.startFrame!.buffer),
+                          child: InkWell(
+                            onTap: () => _adjustClip(index),
+                            child: Image(
+                              fit: BoxFit.cover,
+                              filterQuality: FilterQuality.low,
+                              image: CacheImageProvider(
+                                '${stamp.start}',
+                                Uint8List.view(stamp.startFrame!.buffer),
+                              ),
                             ),
                           ),
                         ),
@@ -228,13 +238,6 @@ class _VideoPlayerState extends State<VideoPlayer> {
                         TextButton(
                             onPressed: () => _player.seek(stamp.start),
                             child: const Text('Seek to position')),
-                        TextButton(
-                            onPressed: () => introStart = stamp.start,
-                            child: const Text('Mark as intro start')),
-                        TextButton(
-                          onPressed: () => introEnd = stamp.start,
-                          child: const Text('Mark as intro stop'),
-                        ),
                       ],
                     ),
                   ),

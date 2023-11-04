@@ -72,6 +72,11 @@ dev_dependencies:
   ffigen: ^9.0.1
   jnigen: ^0.7.0
 
+
+#dependency_overrides:
+#  jnigen:
+#    path: jnigen_debug/jnigen
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

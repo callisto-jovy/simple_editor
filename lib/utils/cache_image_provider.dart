@@ -9,7 +9,6 @@ class CacheImageProvider extends ImageProvider<CacheImageProvider> {
 
   CacheImageProvider(this.tag, this.img);
 
-  @override
   ImageStreamCompleter load(
       CacheImageProvider key,
       Future<Codec> Function(Uint8List, {bool allowUpscaling, int? cacheHeight, int? cacheWidth})
