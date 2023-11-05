@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:video_editor/widgets/timeline_editor.dart';
 
@@ -10,26 +11,24 @@ abstract class AbstractClip {
 
   AbstractClip({required this.clipLength, required this.positionOffset});
 
+  double get width => (clipLength.inMilliseconds * milliPixelMultiplier);
+
+  double height(final Size size) => size.height;
+
   Offset constrainPosition(final RenderBox renderBox, final Offset offset) {
     // Elements are translated at their center.
     // therefore: Offset the center.
-    final Rect ownBounds = paintingBoundsOffset(offset, renderBox.size);
 
-    final double limitX =
-        offset.dx.clamp(ownBounds.width / 2, renderBox.size.width - ownBounds.width / 2);
+    final double limitX = clampDouble(offset.dx, width / 2, renderBox.size.width);
 
-    final double limitY =
-        offset.dy.clamp(ownBounds.height / 2, renderBox.size.height - ownBounds.height / 2);
+    final double limitY = height(renderBox.size) / 2;
 
     // Offset within the bounds.
     return Offset(limitX, limitY);
   }
 
-
-
   Rect paintingBounds(final Size size) => paintingBoundsOffset(positionOffset, size);
 
-  // TODO: from size
   Rect paintingBoundsOffset(final Offset offset, final Size size) =>
-      Rect.fromCenter(center: offset, width: (clipLength.inMilliseconds / 1000 * 0.05 * size.width), height: kLaneHeight);
+      Rect.fromCenter(center: offset, width: width, height: height(size));
 }

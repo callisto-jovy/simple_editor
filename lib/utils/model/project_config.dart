@@ -1,11 +1,9 @@
-import 'package:path/path.dart' as path;
-import 'package:video_editor/utils/config.dart' as config;
+import 'package:video_editor/utils/audio_data.dart';
 import 'package:video_editor/utils/easy_edits_backend.dart' as backend;
 import 'package:video_editor/utils/model/audio_clip.dart';
 import 'package:video_editor/utils/model/filter_wrapper.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
-import 'package:wav/wav_file.dart';
 
 class ProjectConfig {
   /// No parameters.
@@ -58,26 +56,21 @@ class ProjectConfig {
       .toList();
 
   /// Converts the [List] of timestamps into a [List] of the time between the stamps.
-  Future<List<double>> timeBetweenBeats() async {
+  List<double> timeBetweenBeats() {
     final List<double> timeBetweenBeats = [];
-
-    final Wav wav = await Wav.readFile(config.videoProject.config.audioPath);
-
-    /// Total length / spp = length in seconds
-    final double lengthInMillis = ((wav.toMono().length / wav.samplesPerSecond) * 1000);
 
     // Calculate the difference between the timestamps.
     // this is the time one beat lasts.
     double lastBeat = 0;
 
-    for(int i = 0; i < beatStamps.length - 1; i++) {
+    for (int i = 0; i < beatStamps.length - 1; i++) {
       final double timeStamp = beatStamps[i];
       final double diff = timeStamp - lastBeat;
       timeBetweenBeats.add(diff);
       lastBeat = timeStamp;
     }
 
-    timeBetweenBeats.add(lengthInMillis - lastBeat);
+    timeBetweenBeats.add(audioLength - lastBeat);
 
     return timeBetweenBeats;
   }
@@ -123,79 +116,4 @@ class ProjectConfig {
         'clip_previews': generatedPreviews,
         'filters': filters.toList(),
       };
-
-  /// Converts the project's state into a json format which the Java-backend can understand.
-  /// This [Map] stores the most important information in order to configure the editor.
-  Future<Map<String, dynamic>> editorConfig() async {
-    final List<double> beatTimes = await timeBetweenBeats();
-
-    return {
-      'source_video': videoPath,
-      'source_audio': audioPath,
-      'peak_threshold': peakThreshold,
-      'ms_threshold': msThreshold,
-      'working_path': config.videoProject.workingDirectory.path,
-      'output_path': path.join(
-          config.videoProject.projectPath, '${path.basenameWithoutExtension(videoPath)}.mkv'),
-
-      //TODO: Request file picker for filename and path.
-      'editor_state': {
-        'intro_start': introStart == null ? -1 : introStart!.inMicroseconds,
-        'intro_end': introEnd == null ? -1 : introEnd!.inMicroseconds,
-        'video_clips': videoClips.isEmpty
-            ? timeStamps
-                .asMap()
-                .map((key, value) => MapEntry(key, {
-                      'time_stamp': value.start.inMicroseconds,
-                      'mute_audio': true,
-                      'clip_length': beatTimes[key] // TODO: Figure out, whether this works.
-                    }))
-                .values
-                .toList()
-            : videoClips
-                .map((e) => {
-                      'time_stamp': e.timeStamp.start.inMicroseconds,
-                      'mute_audio': e.audioMuted,
-                      'clip_length': e.clipLength.inMilliseconds
-                    })
-                .toList(), // NOTE:: breaking change for older backend versions.
-        'editing_flags': editingOptions,
-        'filters': filters
-            .where((element) => element.enabled)
-            .map((e) => {'name': e.name, 'values': e.values})
-            .toList(),
-      },
-    };
-  }
-
-  Map<String, dynamic> previewJson(final VideoClip clip) {
-    return {
-      'source_video': videoPath,
-      'working_path': config.videoProject.workingDirectory.path,
-      'clip': {
-        'time_stamp': clip.timeStamp.start.inMicroseconds,
-        'mute_audio': clip.audioMuted,
-        'clip_length': clip.clipLength.inMilliseconds
-      },
-      'filters': filters
-          .where((element) => element.enabled)
-          .map((e) => {'name': e.name, 'values': e.values})
-          .toList(),
-      'editing_flags': editingOptions,
-    };
-  }
-
-  Map<String, dynamic> previewEdit(final List<String> previewPaths) {
-    return {
-      'source_video': videoPath,
-      'source_audio': audioPath,
-      'working_path': config.videoProject.workingDirectory.path,
-      'filters': filters
-          .where((element) => element.enabled)
-          .map((e) => {'name': e.name, 'values': e.values})
-          .toList(),
-      'editing_flags': editingOptions,
-      'previews': previewPaths,
-    };
-  }
 }

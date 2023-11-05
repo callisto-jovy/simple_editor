@@ -5,9 +5,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:video_editor/pages/audio_analysis.dart';
+import 'package:video_editor/pages/audio_analysis_page.dart';
+import 'package:video_editor/pages/clip_selection_page.dart';
 import 'package:video_editor/pages/settings_page.dart';
-import 'package:video_editor/pages/video_player.dart';
 import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/edit_util.dart';
@@ -47,7 +47,6 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
   final StreamController<List<AudioClip>> _audioClipController = StreamController();
 
   final GlobalKey _dragTargetKey = GlobalKey();
-
 
   /// Create a [Player] to control playback.
   final _player = Player(
@@ -181,12 +180,12 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     );
 
     if (result != null) {
-      config.importFile(path: result.files[0].path);
+      await config.importFile(path: result.files[0].path);
       callback.call();
     }
   }
 
-  Future<void> _timeStampDroppedOnTimeline(final TimeStamp timeStamp, final Offset offset) async {
+  void _timeStampDroppedOnTimeline(final TimeStamp timeStamp, final Offset offset) {
     final RenderBox? renderBox = _dragTargetKey.currentContext?.findRenderObject() as RenderBox?;
     // TODO: proper error
     if (renderBox == null) {
@@ -195,20 +194,21 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     }
 
     // Convert the newly dropped timestamp to a clip
-    final List<double> beatTimes = await config.videoProject.config.timeBetweenBeats();
+    final List<double> beatTimes = config.config.timeBetweenBeats();
 
     final int nextIndex = config.videoProject.config.videoClips.length;
 
     if (nextIndex >= beatTimes.length) {
       return;
     }
-    final Duration beatLength = Duration(milliseconds: beatTimes[nextIndex].round());
 
+    final Duration beatLength = Duration(milliseconds: beatTimes[nextIndex].round());
 
     // Translate away from the center.
     final Offset translatedOffset = renderBox.globalToLocal(offset);
 
-    final VideoClip videoClip = VideoClip(timeStamp, clipLength: beatLength, positionOffset: translatedOffset);
+    final VideoClip videoClip =
+        VideoClip(timeStamp, clipLength: beatLength, positionOffset: translatedOffset);
     // Constrain the position
     videoClip.positionOffset = videoClip.constrainPosition(renderBox, translatedOffset);
 
@@ -280,7 +280,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
             Text(config.videoProject.config.audioPath),
             const Padding(padding: EdgeInsets.all(10)),
             IconButton(
-              onPressed: () => _importFile((p0) => config.videoProject.config.audioPath = p0),
+              onPressed: () => _importFile(config.setAudioPath),
               icon: const Icon(Icons.file_open),
               style: iconButtonStyle(context),
             ),
@@ -443,7 +443,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
       body: Row(
         children: [
           SizedBox(
-            width: size.width * 0.25,
+            width: size.width * 0.15,
             height: size.height,
             child: _buildAudioAndClipsColumn(context),
           ),

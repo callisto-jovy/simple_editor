@@ -1,16 +1,20 @@
-import 'dart:async';
+import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:jni/jni.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:video_editor/utils/config.dart';
+import 'package:video_editor/utils/easy_edits_backend.dart' as backend;
+import 'package:video_editor/utils/extensions/build_context_extension.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
+import 'package:video_editor/utils/transparent_image.dart';
 
 class ClipAdjust extends StatefulWidget {
-  final VideoClip clip;
+  final VideoClip videoClip;
 
-  const ClipAdjust({super.key, required this.clip});
+  const ClipAdjust({super.key, required this.videoClip});
 
   @override
   State<ClipAdjust> createState() => _ClipAdjustState();
@@ -29,137 +33,104 @@ class _ClipAdjustState extends State<ClipAdjust> {
   /// Create a [VideoController] to handle video output from [Player].
   late final VideoController _controller = VideoController(_player);
 
-  late final StreamSubscription<Duration> _playbackSubscription;
+  /// [ScrollController] which controls the thumbnails.
+  final ScrollController _timeLineScroll = ScrollController();
 
-  late final TextEditingController _startController;
-  late final TextEditingController _lengthController;
+  final double thumbnailHeight = 200;
 
-  Future<void> _initPlayer() async {
-    await _player.open(Media(config.videoPath));
-    await _player.seek(widget.clip.timeStamp.start);
-
-    /// This is super fucking low tech
-    bool seeking = false;
-    _playbackSubscription = _player.stream.position.listen((event) async {
-      if (event > widget.clip.timeStamp.start + widget.clip.clipLength && !seeking && _player.state.playing) {
-        seeking = true;
-        await _player.seek(widget.clip.timeStamp.start);
-        seeking = false;
-      }
-    });
-  }
+  // One thumbnail for every 200ms.
+  late final int numberOfThumbnails = (widget.videoClip.clipLength.inMilliseconds / 200).round();
 
   @override
   void initState() {
     super.initState();
-
-    _startController =
-        TextEditingController(text: widget.clip.timeStamp.start.inMilliseconds.toString());
-    _lengthController =
-        TextEditingController(text: widget.clip.clipLength.inMilliseconds.toString());
-    _initPlayer();
+    backend.FlutterWrapper.initFrameExport(
+      JString.fromString(config.videoPath),
+      JString.fromString(videoProject.workingDirectory.path),
+    );
   }
 
   @override
   void dispose() {
-    _player.dispose();
-    _playbackSubscription.cancel();
-    _startController.dispose();
-    _lengthController.dispose();
     super.dispose();
+    _timeLineScroll.dispose();
+    backend.FlutterWrapper.stopFrameExport();
   }
 
-  Widget _buildVideoPlayer() {
-    final Size size = MediaQuery.of(context).size;
+  Stream<List<(String, Uint8List)>> getFrames() async* {
+    final List<(String, Uint8List)> idFrameList = [];
 
-    return Expanded(
-      flex: 2,
-      child: MaterialDesktopVideoControlsTheme(
-        normal: MaterialDesktopVideoControlsThemeData(
-          keyboardShortcuts: {
-            const SingleActivator(LogicalKeyboardKey.mediaPlay): () => _player.play(),
-            const SingleActivator(LogicalKeyboardKey.mediaPause): () => _player.pause(),
-            const SingleActivator(LogicalKeyboardKey.space): () => _player.playOrPause(),
-            const SingleActivator(LogicalKeyboardKey.keyJ): () {
-              final rate = _player.state.position - const Duration(seconds: 10);
-              _player.seek(rate);
-            },
-            const SingleActivator(LogicalKeyboardKey.keyI): () {
-              final rate = _player.state.position + const Duration(seconds: 10);
-              _player.seek(rate);
-            },
-            const SingleActivator(LogicalKeyboardKey.arrowLeft): () {
-              final rate = _player.state.position - const Duration(seconds: 2);
-              _player.seek(rate);
-            },
-            const SingleActivator(LogicalKeyboardKey.arrowRight): () {
-              final rate = _player.state.position + const Duration(seconds: 2);
-              _player.seek(rate);
-            },
-            const SingleActivator(LogicalKeyboardKey.arrowUp): () {
-              final rate = _player.state.position + const Duration(seconds: 60);
-              _player.seek(rate);
-            },
-            const SingleActivator(LogicalKeyboardKey.arrowDown): () {
-              final rate = _player.state.position - const Duration(seconds: 60);
-              _player.seek(rate);
-            },
-            const SingleActivator(LogicalKeyboardKey.keyF): () => toggleFullscreen(context),
-            const SingleActivator(LogicalKeyboardKey.escape): () => exitFullscreen(context),
-            const SingleActivator(LogicalKeyboardKey.keyX): () {
-              final Duration pos = _player.state.position;
+    // every 200ms, we want a frame.
+    for (int i = 0; i < numberOfThumbnails; i++) {
+      final int offset = widget.videoClip.timeStamp.start.inMicroseconds + (i * 10000000);
 
-              setState(() {
-                widget.clip.timeStamp.start = pos;
-                _startController.text = pos.inMilliseconds.toString();
-              });
+      final Uint8List data = await Isolate.run(() {
+        final JByteBuffer frameBuffer = backend.FlutterWrapper.getFrame(offset);
+
+        final int remaining = frameBuffer.remaining;
+        final Uint8List data = Uint8List(remaining);
+        // TODO: Use a more efficient approach when
+        // https://github.com/dart-lang/jnigen/issues/387 is fixed.
+
+        for (var i = 0; i < remaining; ++i) {
+          data[i] = frameBuffer.nextByte;
+        }
+
+        frameBuffer.release();
+        return data;
+      });
+
+      idFrameList.add(('${i}_$offset', data));
+      yield idFrameList;
+    }
+  }
+
+  Widget _buildVideoTimeline() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      controller: _timeLineScroll,
+      child: SizedBox(
+        width: thumbnailHeight * numberOfThumbnails,
+        height: context.mediaSize.height / 4,
+        child: StreamBuilder(
+          stream: getFrames(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Container();
             }
-          },
-        ),
-        fullscreen: const MaterialDesktopVideoControlsThemeData(),
-        child: SizedBox(
-          width: size.width,
-          height: (size.width) * 9.0 / 16.0,
-          child: Video(
-            controller: _controller,
-            wakelock: true,
-          ),
-        ),
-      ),
-    );
-  }
 
-  /// TODO: more user friendly version.
-  /// for now, just two text-fields xd...
-  /// one for the length, the other one for the start
-  Widget _buildTrimmer() {
-    return Flexible(
-      child: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Flexible(
-              child: TextFormField(
-                controller: _startController,
-                decoration: const InputDecoration(labelText: 'Start time (ms)'),
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                onFieldSubmitted: (value) =>
-                    widget.clip.timeStamp.start = Duration(milliseconds: int.parse(value)),
+            final List<(String, Uint8List)?> imageBytes = snapshot.data!;
+
+            return Row(
+              mainAxisSize: MainAxisSize.max,
+              children: List.generate(
+                numberOfThumbnails,
+                    (index) => SizedBox(
+                  height: thumbnailHeight,
+                  width: thumbnailHeight,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Opacity(
+                        opacity: 0.2,
+                        child: Image.memory(
+                          imageBytes[0] == null ? kTransparentImage : imageBytes[0]!.$2,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      index < imageBytes.length
+                          ? FadeInImage(
+                        placeholder: MemoryImage(kTransparentImage),
+                        image: MemoryImage(imageBytes[index]!.$2),
+                        fit: BoxFit.cover,
+                      )
+                          : const SizedBox(),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            const Padding(padding: EdgeInsets.all(15)),
-            Flexible(
-              child: TextFormField(
-                controller: _lengthController,
-                decoration: const InputDecoration(labelText: 'Clip length (ms)'),
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                onFieldSubmitted: (value) =>
-                    widget.clip.clipLength = Duration(milliseconds: int.parse(value)),
-              ),
-            )
-          ],
+            );
+          },
         ),
       ),
     );
@@ -167,18 +138,27 @@ class _ClipAdjustState extends State<ClipAdjust> {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: colorScheme.inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         centerTitle: true,
         title: const Text('Easy Edits'),
       ),
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [_buildVideoPlayer(), _buildTrimmer()],
+        children: [
+          Expanded(
+            flex: 3,
+            child: SizedBox(
+              width: context.mediaSize.width,
+              height: (context.mediaSize.width) * 9.0 / 16.0,
+              child: Video(
+                controller: _controller,
+                wakelock: true,
+              ),
+            ),
+          ),
+          _buildVideoTimeline(),
+        ],
       ),
     );
   }

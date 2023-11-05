@@ -41,7 +41,7 @@ Future<String> generateEditPreview() async {
     }
   }
 
-  final String json = previewJson(paths);
+  final String json = previewEditJson(paths);
 
   // Run the preview process in a new isolate.
   final String path =

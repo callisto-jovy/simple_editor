@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
+import 'package:video_editor/utils/audio_data.dart';
+import 'package:video_editor/utils/backend_util.dart';
 import 'package:video_editor/utils/config_util.dart';
 import 'package:video_editor/utils/model/project.dart';
 import 'package:video_editor/utils/model/project_config.dart';
@@ -50,6 +52,11 @@ void fromJson(final Map<String, dynamic> json) {
   videoProject = VideoProject.fromJson(json);
 }
 
+Future<void> setAudioPath(final String path) async {
+  config.audioPath = path;
+  return loadAudioData();
+}
+
 void removeClip(final VideoClip videoClip) {
   // Delete old preview
   if (config.generatedPreviews.containsKey(videoClip.id)) {
@@ -85,17 +92,17 @@ Future<void> handlePreview(final String previewPath) async {
 
 /// Creates a JSON [String] with all the app's state to pass to the backend.
 Future<String> toEditorConfig() async {
-  final json = await config.editorConfig();
+  final json = editorConfig();
   return kEncoder.convert(json);
 }
 
 String previewSegmentJson(final VideoClip videoClip) {
-  final json = config.previewJson(videoClip);
+  final json = previewJson(videoClip);
   return kEncoder.convert(json);
 }
 
-String previewJson(final List<String> previews) {
-  final json = config.previewEdit(previews);
+String previewEditJson(final List<String> previews) {
+  final json = previewEdit(previews);
   return kEncoder.convert(json);
 }
 
@@ -133,8 +140,8 @@ Future<void> updateVideoClips(final List<VideoClip> clips) async {
   }
 }
 
-Future<void> updateClipTimes() async {
-  final List<double> beatTimes = await config.timeBetweenBeats();
+void updateClipTimes() {
+  final List<double> beatTimes = config.timeBetweenBeats();
 
   for (int i = 0; i < beatTimes.length; i++) {
     if (i < config.videoClips.length) {
@@ -149,11 +156,12 @@ Future<void> saveApplicationState() async {
   file.writeAsString(appState);
 }
 
-void importFile({String? path}) {
+Future<void> importFile({String? path}) async {
   if (path == null || path.isEmpty) return;
 
   final File file = File(path);
   dynamic json = jsonDecode(file.readAsStringSync());
 
   fromJson(json);
+  await loadAudioData();
 }

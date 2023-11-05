@@ -25,7 +25,6 @@ class _TimeLineState<T extends AbstractClip> extends State<TimeLine<T>> {
 
   final ScrollController _timeLineScroll = ScrollController();
 
-
   /// TODO: use another hook.
   @override
   void didUpdateWidget(covariant TimeLine<T> oldWidget) {
@@ -84,18 +83,14 @@ class _TimeLineState<T extends AbstractClip> extends State<TimeLine<T>> {
 
     /* Collision detection. */
 
-    final Rect draggedRect = draggingClip!.paintingBoundsOffset(positionOffset, renderBox.size); // simulated new position.
+    final Rect draggedRect = draggingClip!
+        .paintingBoundsOffset(positionOffset, renderBox.size); // simulated new position.
 
     // Check whether the new rect overlaps with any OTHER clips.
     for (final T clip in widget.clips) {
       final Rect clipBounds = clip.paintingBounds(context.mediaSize);
 
-      if (clip != draggingClip && (positionOffset.dx < clip.positionOffset.dx + clipBounds.width &&
-          positionOffset.dx + draggedRect.width > clip.positionOffset.dx &&
-          positionOffset.dy < clip.positionOffset.dy + clipBounds.height &&
-          positionOffset.dy + draggedRect.height > clip.positionOffset.dy)) {
-
-
+      if (clip != draggingClip && clipBounds.overlaps(draggedRect)) {
         return; // Stop. Don't update the position.
       }
     }

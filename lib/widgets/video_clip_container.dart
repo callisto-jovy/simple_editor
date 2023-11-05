@@ -22,7 +22,7 @@ class VideoClipContainer extends StatelessWidget {
       required this.onStateChanged});
 
   void _handleClipTap(final BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => ClipAdjust(clip: videoClip)));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => ClipAdjust(videoClip: videoClip)));
   }
 
   @override

@@ -19,14 +19,16 @@ class VideoProject {
 
   /// Default constructor
   VideoProject(this._projectPath, {required this.projectName, required this.config}) {
-    workingDirectory = Directory(path.join(_projectPath, 'editor_out'));
+    _setWorkingDir();
   }
+
+  void _setWorkingDir() => workingDirectory = Directory(path.join(_projectPath, 'editor_out'));
 
   VideoProject.fromJson(final Map<String, dynamic> json)
       : projectName = json['project_name'],
         _projectPath = json['project_path'],
         config = ProjectConfig.fromJson(json['config']) {
-    workingDirectory = Directory(path.join(_projectPath, 'editor_out'));
+    _setWorkingDir();
   }
 
   Map<String, dynamic> toJson(final String version) => {
@@ -38,7 +40,7 @@ class VideoProject {
 
   set projectPath(String value) {
     _projectPath = value;
-    workingDirectory = Directory(path.join(_projectPath, 'editor_out'));
+    _setWorkingDir();
   }
 
   String get projectPath => _projectPath;
