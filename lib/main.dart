@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:context_menus/context_menus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:jni/jni.dart';
@@ -64,22 +63,20 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return ContextMenuOverlay(
-      child: MaterialApp(
-        title: 'Easy Edits',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        darkTheme: ThemeData(
-          colorSchemeSeed: const Color(0x007EA2BF),
-          brightness: Brightness.dark,
-          useMaterial3: true,
-        ),
-        themeMode: ThemeMode.dark,
-        home: const MyHomePage(title: 'Easy Edits'),
-        debugShowCheckedModeBanner: false,
+    return MaterialApp(
+      title: 'Easy Edits',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
       ),
+      darkTheme: ThemeData(
+        colorSchemeSeed: const Color(0x007EA2BF),
+        brightness: Brightness.dark,
+        useMaterial3: true,
+      ),
+      themeMode: ThemeMode.dark,
+      home: const MyHomePage(title: 'Easy Edits'),
+      debugShowCheckedModeBanner: false,
     );
   }
 }

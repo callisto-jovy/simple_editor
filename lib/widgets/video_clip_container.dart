@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:context_menus/context_menus.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
 import 'package:video_editor/pages/clip_adjust_page.dart';
@@ -32,16 +32,54 @@ class VideoClipContainer extends StatelessWidget {
   // One thumbnail for every 500ms.
   late final int numberOfThumbnails = (videoClip.clipLength.inMilliseconds / 500).round();
 
+  // TODO: Check the image cache before requesting the backend.
+  // This will eliminate a lot of slowdown.
   Stream<List<(String, Uint8List)>> getThumbnails() async* {
     final List<(String, Uint8List)> idFrameList = [];
 
     for (int i = 0; i < numberOfThumbnails; i++) {
       final int offset = videoClip.timeStamp.start.inMicroseconds + (i * 10000000);
+
       final Uint8List data = await thumbnailGenerator.call(offset);
 
       idFrameList.add(('${i}_$offset', data));
       yield idFrameList;
     }
+  }
+
+  void _showCustomMenu(final BuildContext context, final PointerDownEvent event) {
+    final RenderBox? overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+
+    if (overlay == null || event.buttons != kSecondaryButton) {
+      return;
+    }
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        event.position.dx,
+        event.position.dy,
+        overlay.size.width - event.position.dx,
+        overlay.size.height - event.position.dy,
+      ),
+      items: [
+        PopupMenuItem(
+          child: const Text('See clip'),
+          onTap: () => _handleClipTap(context),
+        ),
+        PopupMenuItem(
+          child: const Text("Remove clip"),
+          onTap: () {}, //TODO: remove clip callback
+        )
+      ],
+    );
+  }
+
+  ImageProvider<CacheImageProvider> _cachedImage(final (String, Uint8List) obj) {
+    return CacheImageProvider(
+      obj.$1,
+      obj.$2,
+    );
   }
 
   @override
@@ -52,8 +90,8 @@ class VideoClipContainer extends StatelessWidget {
         height: height,
         child: Stack(
           children: [
-            ContextMenuRegion(
-              contextMenu: LinkContextMenu(url: 'http://flutter.dev'),
+            Listener(
+              onPointerDown: (event) => _showCustomMenu(context, event),
               child: StreamBuilder<List<(String, Uint8List)?>>(
                   stream: getThumbnails(),
                   builder: (context, snapshot) {
@@ -75,18 +113,18 @@ class VideoClipContainer extends StatelessWidget {
                             children: [
                               Opacity(
                                 opacity: 0.2,
-                                child: Image.memory(
-                                  imageBytes[0] == null ? kTransparentImage : imageBytes[0]!.$2,
-                                  fit: BoxFit.cover,
-                                ),
+                                child: imageBytes[0] == null
+                                    ? Image.memory(kTransparentImage,
+                                        fit: BoxFit.cover) // Transparent placeholder
+                                    : Image(
+                                        image: _cachedImage(imageBytes[0]!),
+                                        fit: BoxFit.cover, // Last image as a placeholder
+                                      ),
                               ),
                               index < imageBytes.length
                                   ? FadeInImage(
-                                      placeholder: MemoryImage(kTransparentImage),
-                                      image: CacheImageProvider(
-                                        '${videoClip.timeStamp.start}',
-                                        Uint8List.view(videoClip.timeStamp.startFrame!.buffer),
-                                      ),
+                                      placeholder: placeHolder,
+                                      image: _cachedImage(imageBytes[index]!),
                                       fit: BoxFit.cover,
                                     )
                                   : const SizedBox(),

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_audio_waveforms/flutter_audio_waveforms.dart';
 import 'package:jni/jni.dart';
 import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
-import 'package:video_editor/utils/audio_data.dart';
+import 'package:video_editor/utils/model/audio_data.dart';
 import 'package:video_editor/utils/easy_edits_backend.dart';
 import 'package:video_editor/utils/extensions/build_context_extension.dart';
 import 'package:video_editor/utils/frame_export_util.dart';
@@ -41,18 +41,14 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
   Widget _buildAudioContainer() {
     return Padding(
       padding: const EdgeInsets.all(5),
-      child: Column(
-        children: [
-          SizedBox(
-            width: laneWidth,
-            height: laneHeight,
-            child: PolygonWaveform(
-              samples: samples,
-              height: laneHeight,
-              width: laneWidth,
-            ),
-          ),
-        ],
+      child: SizedBox(
+        width: laneWidth,
+        height: laneHeight,
+        child: PolygonWaveform(
+          samples: samples,
+          height: laneHeight,
+          width: laneWidth,
+        ),
       ),
     );
   }

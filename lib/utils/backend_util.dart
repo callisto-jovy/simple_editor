@@ -1,7 +1,5 @@
 import 'package:path/path.dart';
 import 'package:video_editor/utils/config.dart';
-import 'package:video_editor/utils/model/project.dart';
-import 'package:video_editor/utils/model/project_config.dart';
 
 import 'model/video_clip.dart';
 

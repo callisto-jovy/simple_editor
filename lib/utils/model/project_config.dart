@@ -1,4 +1,4 @@
-import 'package:video_editor/utils/audio_data.dart';
+import 'package:video_editor/utils/model/audio_data.dart';
 import 'package:video_editor/utils/easy_edits_backend.dart' as backend;
 import 'package:video_editor/utils/model/audio_clip.dart';
 import 'package:video_editor/utils/model/filter_wrapper.dart';

@@ -13,7 +13,6 @@ void startFrameExport() {
 }
 
 
-
 /// Calls the backend & tells it to release all allocated resources which are associated with the current frame exporting instance.
 void stopFrameExport() {
   backend.FlutterWrapper.stopFrameExport();

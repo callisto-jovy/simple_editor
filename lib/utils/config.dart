@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
-import 'package:video_editor/utils/audio_data.dart';
+import 'package:video_editor/utils/model/audio_data.dart';
 import 'package:video_editor/utils/backend_util.dart';
 import 'package:video_editor/utils/config_util.dart';
 import 'package:video_editor/utils/model/project.dart';

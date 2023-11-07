@@ -10,10 +10,8 @@ class CacheImageProvider extends ImageProvider<CacheImageProvider> {
   CacheImageProvider(this.tag, this.img);
 
   @override
-  ImageStreamCompleter load(
-      CacheImageProvider key,
-      Future<Codec> Function(Uint8List, {bool allowUpscaling, int? cacheHeight, int? cacheWidth})
-          decode) {
+  ImageStreamCompleter loadImage(
+      CacheImageProvider key, ImageDecoderCallback decode) {
     return MultiFrameImageStreamCompleter(
       codec: _loadAsync(decode),
       scale: 1.0,
@@ -24,9 +22,7 @@ class CacheImageProvider extends ImageProvider<CacheImageProvider> {
     );
   }
 
-  Future<Codec> _loadAsync(
-      Future<Codec> Function(Uint8List, {bool allowUpscaling, int? cacheHeight, int? cacheWidth})
-          decode) async {
+  Future<Codec> _loadAsync(ImageDecoderCallback decode) async {
     // the DefaultCacheManager() encapsulation, it get cache from local storage.
     final Uint8List bytes = img;
 
@@ -35,8 +31,9 @@ class CacheImageProvider extends ImageProvider<CacheImageProvider> {
       PaintingBinding.instance.imageCache.evict(this);
       throw StateError('$tag is empty and cannot be loaded as an image.');
     }
+    final buffer = await ImmutableBuffer.fromUint8List(bytes);
 
-    return await decode(bytes);
+    return await decode(buffer);
   }
 
   @override
@@ -55,5 +52,6 @@ class CacheImageProvider extends ImageProvider<CacheImageProvider> {
   int get hashCode => tag.hashCode;
 
   @override
-  String toString() => '${objectRuntimeType(this, 'CacheImageProvider')}("$tag")';
+  String toString() =>
+      '${objectRuntimeType(this, 'CacheImageProvider')}("$tag")';
 }

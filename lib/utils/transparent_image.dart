@@ -1,5 +1,11 @@
 import 'dart:typed_data';
 
+import 'package:flutter/cupertino.dart';
+
+
+MemoryImage get placeHolder => MemoryImage(kTransparentImage);
+
+
 final Uint8List kTransparentImage = Uint8List.fromList(<int>[
   0x89,
   0x50,

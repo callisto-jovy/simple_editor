@@ -56,8 +56,6 @@ dependencies:
   audioplayers: ^5.2.0 # audioplayer for the audio analysis
   uuid: ^3.0.7 # uuid for unique ids
   window_manager: ^0.3.7 #
-  neumorphic_ui: ^1.0.1
-  context_menus: ^1.0.2
 
 
 dev_dependencies:
