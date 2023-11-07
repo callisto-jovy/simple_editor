@@ -1,5 +1,10 @@
+import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:video_editor/utils/extensions/build_context_extension.dart';
+import 'package:video_editor/utils/frame_export_util.dart';
 import 'package:video_editor/utils/model/abstract_clip.dart';
 import 'package:video_editor/widgets/time_line_painter.dart';
 
@@ -38,6 +43,11 @@ class _TimeLineState<T extends AbstractClip> extends State<TimeLine<T>> {
     for (final T clip in widget.clips) {
       clip.positionOffset = clip.constrainPosition(renderBox, clip.positionOffset);
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -114,6 +124,19 @@ class _TimeLineState<T extends AbstractClip> extends State<TimeLine<T>> {
       draggingClip = null;
     });
   }
+
+  /*
+  Future<ui.Image> loadUiImage(final T clip) async {
+    final ByteData data = await rootBundle.load(imageAssetPath);
+    final Completer<ui.Image> completer = Completer();
+
+    ui.decodeImageFromList(Uint8List.view(data.buffer), (ui.Image img) {
+      return completer.complete(img);
+    });
+    return completer.future;
+  }
+
+   */
 
   @override
   Widget build(BuildContext context) {

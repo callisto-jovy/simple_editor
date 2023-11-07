@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:jni/jni.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:video_editor/utils/config.dart';
 import 'package:video_editor/utils/easy_edits_backend.dart' as backend;
 import 'package:video_editor/utils/extensions/build_context_extension.dart';
+import 'package:video_editor/utils/frame_export_util.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
 import 'package:video_editor/utils/transparent_image.dart';
 
@@ -44,17 +44,13 @@ class _ClipAdjustState extends State<ClipAdjust> {
   @override
   void initState() {
     super.initState();
-    backend.FlutterWrapper.initFrameExport(
-      JString.fromString(config.videoPath),
-      JString.fromString(videoProject.workingDirectory.path),
-    );
   }
 
   @override
   void dispose() {
     super.dispose();
     _timeLineScroll.dispose();
-    backend.FlutterWrapper.stopFrameExport();
+    stopFrameExport();
   }
 
   Stream<List<(String, Uint8List)>> getFrames() async* {
@@ -105,7 +101,7 @@ class _ClipAdjustState extends State<ClipAdjust> {
               mainAxisSize: MainAxisSize.max,
               children: List.generate(
                 numberOfThumbnails,
-                    (index) => SizedBox(
+                (index) => SizedBox(
                   height: thumbnailHeight,
                   width: thumbnailHeight,
                   child: Stack(
@@ -120,10 +116,10 @@ class _ClipAdjustState extends State<ClipAdjust> {
                       ),
                       index < imageBytes.length
                           ? FadeInImage(
-                        placeholder: MemoryImage(kTransparentImage),
-                        image: MemoryImage(imageBytes[index]!.$2),
-                        fit: BoxFit.cover,
-                      )
+                              placeholder: MemoryImage(kTransparentImage),
+                              image: MemoryImage(imageBytes[index]!.$2),
+                              fit: BoxFit.cover,
+                            )
                           : const SizedBox(),
                     ],
                   ),

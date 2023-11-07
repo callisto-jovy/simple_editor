@@ -11,6 +11,7 @@ import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/utils/config.dart' as config;
 import 'package:video_editor/utils/edit_util.dart';
+import 'package:video_editor/utils/frame_export_util.dart';
 import 'package:video_editor/utils/model/audio_clip.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
@@ -69,6 +70,8 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     _player.dispose();
     // Remove the window manager listener
     windowManager.removeListener(this);
+
+    stopFrameExport();
   }
 
   @override
@@ -86,7 +89,10 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     _videoClipController.add(config.config.videoClips);
 
     setState(() {});
+
+    startFrameExport();
   }
+
 
   @override
   void onWindowClose() {

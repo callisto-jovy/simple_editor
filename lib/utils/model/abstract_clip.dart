@@ -19,7 +19,7 @@ abstract class AbstractClip {
     // Elements are translated at their center.
     // therefore: Offset the center.
 
-    final double limitX = clampDouble(offset.dx, width / 2, renderBox.size.width);
+    final double limitX = clampDouble(offset.dx, width / 2, renderBox.size.width - width / 2);
 
     final double limitY = height(renderBox.size) / 2;
 

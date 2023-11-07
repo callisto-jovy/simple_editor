@@ -12,10 +12,9 @@ class AudioClip extends AbstractClip {
 
   @override
   Offset constrainPosition(RenderBox renderBox, Offset offset) {
-    final double limitX = clampDouble(offset.dx, width / 2, renderBox.size.width);
+    final double limitX = clampDouble(offset.dx, width / 2, renderBox.size.width - width / 2);
 
-    final double limitY = clampDouble(
-        offset.dy, height(renderBox.size) / 2, renderBox.size.height - height(renderBox.size) / 2);
+    final double limitY = clampDouble(offset.dy, height(renderBox.size) / 2, renderBox.size.height - height(renderBox.size) / 2);
 
     // Offset within the bounds.
     return Offset(limitX, limitY);

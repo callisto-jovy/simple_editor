@@ -28,8 +28,10 @@ class TimeLinePainter<T extends AbstractClip> extends CustomPainter {
       indexTp.layout();
       indexTp.paint(canvas, paintRect.center.translate(-indexTp.width * 0.5, -indexTp.height / 2));
     }
-
   }
+
+
+
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
