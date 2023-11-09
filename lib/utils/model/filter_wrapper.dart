@@ -1,4 +1,4 @@
-import 'package:video_editor/utils/easy_edits_backend.dart' as backend;
+import 'package:video_editor/utils/backend/easy_edits_backend.dart' as backend;
 
 class FilterWrapper {
   final String name;

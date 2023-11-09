@@ -7,7 +7,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
 import 'package:video_editor/pages/settings_page.dart';
-import 'package:video_editor/utils/config.dart' as config;
+import 'package:video_editor/utils/config/config.dart' as config;
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/widgets/custom_video_controls.dart' as custom_controls;
@@ -60,7 +60,6 @@ class _VideoPlayerState extends State<VideoPlayer> {
   void initState() {
     // Open the media in a new microtask
     _player.open(Media(config.videoProject.config.videoPath)).then((value) => _loadTimeStamps());
-
     super.initState();
   }
 
@@ -162,7 +161,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
     );
   }
 
-  Widget proxyDecorator(Widget child, int index, Animation<double> animation) {
+  Widget _proxyDecorator(Widget child, int index, Animation<double> animation) {
     return AnimatedBuilder(
       animation: animation,
       builder: (BuildContext context, Widget? child) {
@@ -189,7 +188,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
           child: Scrollbar(
             controller: _timeLineScroll,
             child: ReorderableListView.builder(
-              proxyDecorator: proxyDecorator,
+              proxyDecorator: _proxyDecorator,
               itemBuilder: (context, index) {
                 final TimeStamp stamp = timeStamps[index];
                 return Card(

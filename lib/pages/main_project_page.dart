@@ -9,13 +9,13 @@ import 'package:video_editor/pages/audio_analysis_page.dart';
 import 'package:video_editor/pages/clip_selection_page.dart';
 import 'package:video_editor/pages/settings_page.dart';
 import 'package:video_editor/utils/cache_image_provider.dart';
-import 'package:video_editor/utils/config.dart' as config;
-import 'package:video_editor/utils/edit_util.dart';
-import 'package:video_editor/utils/frame_export_util.dart';
+import 'package:video_editor/utils/config/config.dart' as config;
+import 'package:video_editor/utils/backend/edit_util.dart';
+import 'package:video_editor/utils/backend/frame_export_util.dart';
 import 'package:video_editor/utils/model/audio_clip.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
-import 'package:video_editor/utils/preview_util.dart' as preview;
+import 'package:video_editor/utils/backend/preview_util.dart' as preview;
 import 'package:video_editor/widgets/snackbars.dart';
 import 'package:video_editor/widgets/styles.dart';
 import 'package:video_editor/widgets/time_stamp_widget.dart';
@@ -424,6 +424,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
               return TimeLineEditor(
                 videoClipController: _videoClipController,
                 audioClipController: _audioClipController,
+                onReorder: (p0) => null,
               );
             },
             onAcceptWithDetails: (details) {

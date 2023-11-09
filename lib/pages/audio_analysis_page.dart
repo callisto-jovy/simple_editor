@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_audio_waveforms/flutter_audio_waveforms.dart';
 import 'package:jni/jni.dart';
 import 'package:path/path.dart' as path;
-import 'package:video_editor/utils/audio_data_loader.dart';
-import 'package:video_editor/utils/config.dart' as config;
-import 'package:video_editor/utils/easy_edits_backend.dart';
+import 'package:video_editor/utils/audio/audio_data_util.dart';
+import 'package:video_editor/utils/config/config.dart' as config;
+import 'package:video_editor/utils/backend/easy_edits_backend.dart';
 import 'package:video_editor/widgets/audio/audio_player_controls.dart';
 import 'package:video_editor/widgets/styles.dart';
 import 'package:video_editor/widgets/time_stamp_painer.dart';
@@ -54,7 +54,7 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
     /// Total length / spp = length in seconds
     _lengthInMillis = ((wav.toMono().length / wav.samplesPerSecond) * 1000);
 
-    final List<double> samplesData = chopSamples(wav.toMono(), wav.samplesPerSecond);
+    final List<double> samplesData = reduceSamples(wav.toMono(), wav.samplesPerSecond);
 
     setState(() {
       _samples.clear();
@@ -91,6 +91,7 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
         config.config.beatStamps.add(element.doubleValue(releaseOriginal: true));
       }
     });
+
   }
 
   void _addTimeStampForRemoval(final List<double> timeStamp) {

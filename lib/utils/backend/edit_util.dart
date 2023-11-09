@@ -1,8 +1,8 @@
 import 'dart:isolate';
 
 import 'package:jni/jni.dart';
-import 'package:video_editor/utils/config.dart';
-import 'package:video_editor/utils/easy_edits_backend.dart';
+import 'package:video_editor/utils/config/config.dart';
+import 'package:video_editor/utils/backend/easy_edits_backend.dart';
 import 'package:video_editor/utils/log_util.dart';
 import 'package:video_editor/utils/notifier.dart';
 

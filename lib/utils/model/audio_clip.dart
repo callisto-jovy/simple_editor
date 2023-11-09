@@ -1,11 +1,21 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:video_editor/utils/audio/audio_data_util.dart';
 import 'package:video_editor/utils/model/abstract_clip.dart';
 
 class AudioClip extends AbstractClip {
+
+  late List<double> samples;
+
   Duration timeStamp;
 
-  AudioClip({required this.timeStamp, required super.clipLength, required super.positionOffset});
+  AudioClip({
+    required this.timeStamp,
+    required super.clipLength,
+    required super.positionOffset,
+  }) {
+    samples = readSamplesForClip(this);
+  }
 
   @override
   double height(Size size) => size.height / 4;
@@ -14,7 +24,8 @@ class AudioClip extends AbstractClip {
   Offset constrainPosition(RenderBox renderBox, Offset offset) {
     final double limitX = clampDouble(offset.dx, width / 2, renderBox.size.width - width / 2);
 
-    final double limitY = clampDouble(offset.dy, height(renderBox.size) / 2, renderBox.size.height - height(renderBox.size) / 2);
+    final double limitY = clampDouble(
+        offset.dy, height(renderBox.size) / 2, renderBox.size.height - height(renderBox.size) / 2);
 
     // Offset within the bounds.
     return Offset(limitX, limitY);

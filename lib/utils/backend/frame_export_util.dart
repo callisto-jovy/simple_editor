@@ -1,7 +1,7 @@
 import 'package:jni/jni.dart';
-import 'package:video_editor/utils/easy_edits_backend.dart' as backend;
+import 'package:video_editor/utils/backend/easy_edits_backend.dart' as backend;
 
-import 'config.dart';
+import '../config/config.dart';
 
 /// Calls the backend to make sure that the frame exporting can take place.
 /// Should only be called if the [videoProject] is registered, the video path is non-null and the working directory is non-null as well.

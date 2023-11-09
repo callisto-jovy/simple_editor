@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:video_editor/utils/config.dart';
+import 'package:video_editor/utils/config/config.dart';
 import 'package:video_editor/utils/model/abstract_clip.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 

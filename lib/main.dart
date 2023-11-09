@@ -1,58 +1,25 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:jni/jni.dart';
 import 'package:local_notifier/local_notifier.dart';
 import 'package:media_kit/media_kit.dart';
-import 'package:path/path.dart';
-import 'package:video_editor/pages/create_project_page.dart';
+import 'package:video_editor/pages/create/create_project_page.dart';
 import 'package:video_editor/pages/main_project_page.dart';
-import 'package:video_editor/utils/config.dart' as config;
+import 'package:video_editor/utils/config/config.dart' as config;
+import 'package:video_editor/utils/backend/jni_util.dart';
 import 'package:video_editor/widgets/styles.dart';
 import 'package:window_manager/window_manager.dart';
 
-const jarError = 'No JAR files were found.\n'
-    'Run `dart run jnigen:download_maven_jars --config jnigen.yaml` '
-    'in plugin directory.\n'
-    'Alternatively, regenerate JNI bindings in plugin directory, which will '
-    'automatically download the JAR files.';
-// It's required to manually provide the JAR files as classpath when
-// spawning the JVM.
-const jarDir = 'mvn_jar';
-
 Future<void> main() async {
-  final List<String> jars;
-  try {
-    jars = Directory(jarDir)
-        .listSync()
-        .map((e) => e.path)
-        .where((path) => path.endsWith('.jar'))
-        .toList();
-  } on OSError catch (_) {
-    stderr.writeln(jarError);
-    return;
-  }
-  if (jars.isEmpty) {
-    stderr.writeln(jarError);
-    return;
-  }
-
-  Jni.spawn(
-    dylibDir: join('build', 'jni_libs'),
-    classPath: ['easy_edits/core/target/classes', ...jars],
-  );
-
+  // First thing: Start the backend.
+  spawnJNI();
+  // Necessary for package:window_manager
   WidgetsFlutterBinding.ensureInitialized();
   // Necessary initialization for package:media_kit.
   MediaKit.ensureInitialized();
-
+  // Window manager for native callbacks. In our case: window close.
   await windowManager.ensureInitialized();
-
-  await localNotifier.setup(
-    appName: 'local_notifier_example',
-    shortcutPolicy: ShortcutPolicy.requireCreate,
-  );
+  // native notifications.
+  await localNotifier.setup(appName: 'Easy Edits', shortcutPolicy: ShortcutPolicy.requireCreate);
 
   runApp(const MyApp());
 }
@@ -83,7 +50,6 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
 
   final String title;
 

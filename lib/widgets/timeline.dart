@@ -1,12 +1,8 @@
-import 'dart:async';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
+import 'package:flutter_audio_waveforms/flutter_audio_waveforms.dart';
 import 'package:video_editor/utils/extensions/build_context_extension.dart';
-import 'package:video_editor/utils/frame_export_util.dart';
 import 'package:video_editor/utils/model/abstract_clip.dart';
-import 'package:video_editor/widgets/time_line_painter.dart';
+import 'package:video_editor/utils/model/audio_clip.dart';
 
 class TimeLine<T extends AbstractClip> extends StatefulWidget {
   /// [List] of type [T] holds the clips.
@@ -125,19 +121,6 @@ class _TimeLineState<T extends AbstractClip> extends State<TimeLine<T>> {
     });
   }
 
-  /*
-  Future<ui.Image> loadUiImage(final T clip) async {
-    final ByteData data = await rootBundle.load(imageAssetPath);
-    final Completer<ui.Image> completer = Completer();
-
-    ui.decodeImageFromList(Uint8List.view(data.buffer), (ui.Image img) {
-      return completer.complete(img);
-    });
-    return completer.future;
-  }
-
-   */
-
   @override
   Widget build(BuildContext context) {
     return Listener(
@@ -145,12 +128,19 @@ class _TimeLineState<T extends AbstractClip> extends State<TimeLine<T>> {
       onPointerMove: _handleDragging,
       onPointerUp: _handleDragStop,
       behavior: HitTestBehavior.translucent,
-      child: CustomPaint(
-        key: _videoTimeLineKey,
-        foregroundPainter: TimeLinePainter<T>(
-            clips: widget.clips, draggingClip: draggingClip, textFunction: widget.labelText),
-        child: Container(
-          color: context.theme.hoverColor,
+      child: Container(
+        color: context.theme.hoverColor,
+        child: Row(
+          children: widget.clips.map((e) {
+            return Transform.translate(
+              offset: e.positionOffset,
+              child: PolygonWaveform(
+                samples: (e as AudioClip).samples,
+                width: e.width,
+                height: e.height(context.mediaSize),
+              ),
+            );
+          }).toList(),
         ),
       ),
     );

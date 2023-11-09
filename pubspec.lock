@@ -217,6 +217,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "9.0.1"
+  ffmpeg_cli:
+    dependency: "direct main"
+    description:
+      name: ffmpeg_cli
+      sha256: "29f7230be95de4d90833fcddd62c67c73ca4c12bd3ac9fc117658b1a563e765f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   file:
     dependency: transitive
     description:

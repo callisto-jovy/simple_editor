@@ -1,5 +1,6 @@
-import 'package:video_editor/utils/model/audio_data.dart';
-import 'package:video_editor/utils/easy_edits_backend.dart' as backend;
+import 'package:video_editor/utils/audio/audio_data_util.dart';
+import 'package:video_editor/utils/audio/background_audio.dart';
+import 'package:video_editor/utils/backend/easy_edits_backend.dart' as backend;
 import 'package:video_editor/utils/model/audio_clip.dart';
 import 'package:video_editor/utils/model/filter_wrapper.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
@@ -37,7 +38,10 @@ class ProjectConfig {
   /// [List] of all the video clips in the editor.
   final List<VideoClip> videoClips = [];
 
+  /// [List] of the [AudioClip]s
   final List<AudioClip> audioClips = [];
+
+  late AudioData audioData;
 
   /// [Map] of generated clip previews. Contains the paths to the previews.
   /// Key: a [VideoClip] that a preview was generated for.
@@ -99,6 +103,9 @@ class ProjectConfig {
       }),
     );
     json['video_clips'].forEach((v) => videoClips.add(VideoClip.fromJson(v)));
+
+    // Async loading of the audio data.
+    AudioData.fromJson(json['audio_data']).then((value) => audioData = value);
   }
 
   Map<String, dynamic> toJson() => {
@@ -115,5 +122,6 @@ class ProjectConfig {
         'editing_flags': editingOptions,
         'clip_previews': generatedPreviews,
         'filters': filters.toList(),
+        'audio_data': audioData
       };
 }

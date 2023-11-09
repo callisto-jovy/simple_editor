@@ -1,7 +1,7 @@
 import 'package:path/path.dart';
-import 'package:video_editor/utils/config.dart';
+import 'package:video_editor/utils/config/config.dart';
 
-import 'model/video_clip.dart';
+import '../model/video_clip.dart';
 
 /// Converts the project's state into a json format which the Java-backend can understand.
 /// This [Map] stores the most important information in order to configure the editor.

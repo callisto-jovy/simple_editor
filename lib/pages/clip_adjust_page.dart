@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:jni/jni.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:video_editor/utils/easy_edits_backend.dart' as backend;
+import 'package:video_editor/utils/backend/easy_edits_backend.dart' as backend;
 import 'package:video_editor/utils/extensions/build_context_extension.dart';
-import 'package:video_editor/utils/frame_export_util.dart';
+import 'package:video_editor/utils/backend/frame_export_util.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
 import 'package:video_editor/utils/transparent_image.dart';
 

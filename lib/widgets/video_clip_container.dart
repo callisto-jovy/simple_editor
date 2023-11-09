@@ -42,7 +42,7 @@ class VideoClipContainer extends StatelessWidget {
 
       final Uint8List data = await thumbnailGenerator.call(offset);
 
-      idFrameList.add(('${i}_$offset', data));
+      idFrameList.add(('${videoClip.timeStamp}_${i}_$offset', data));
       yield idFrameList;
     }
   }
@@ -85,60 +85,63 @@ class VideoClipContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return UnconstrainedBox(
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: Stack(
-          children: [
-            Listener(
-              onPointerDown: (event) => _showCustomMenu(context, event),
-              child: StreamBuilder<List<(String, Uint8List)?>>(
-                  stream: getThumbnails(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const Placeholder();
-                    }
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: SizedBox(
+          width: width,
+          height: height,
+          child: Stack(
+            children: [
+              Listener(
+                onPointerDown: (event) => _showCustomMenu(context, event),
+                child: StreamBuilder<List<(String, Uint8List)?>>(
+                    stream: getThumbnails(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Placeholder();
+                      }
 
-                    final List<(String, Uint8List)?> imageBytes = snapshot.data!;
+                      final List<(String, Uint8List)?> imageBytes = snapshot.data!;
 
-                    return Row(
-                      mainAxisSize: MainAxisSize.max,
-                      children: List.generate(
-                        numberOfThumbnails,
-                        (index) => SizedBox(
-                          height: height,
-                          width: width / numberOfThumbnails,
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              Opacity(
-                                opacity: 0.2,
-                                child: imageBytes[0] == null
-                                    ? Image.memory(kTransparentImage,
-                                        fit: BoxFit.cover) // Transparent placeholder
-                                    : Image(
-                                        image: _cachedImage(imageBytes[0]!),
-                                        fit: BoxFit.cover, // Last image as a placeholder
-                                      ),
-                              ),
-                              index < imageBytes.length
-                                  ? FadeInImage(
-                                      placeholder: placeHolder,
-                                      image: _cachedImage(imageBytes[index]!),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : const SizedBox(),
-                            ],
+                      return Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: List.generate(
+                          numberOfThumbnails,
+                          (index) => SizedBox(
+                            height: height,
+                            width: width / numberOfThumbnails,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Opacity(
+                                  opacity: 0.2,
+                                  child: imageBytes[0] == null
+                                      ? Image.memory(kTransparentImage,
+                                          fit: BoxFit.cover) // Transparent placeholder
+                                      : Image(
+                                          image: _cachedImage(imageBytes[0]!),
+                                          fit: BoxFit.cover, // Last image as a placeholder
+                                        ),
+                                ),
+                                index < imageBytes.length
+                                    ? FadeInImage(
+                                        placeholder: placeHolder,
+                                        image: _cachedImage(imageBytes[index]!),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : const SizedBox(),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  }),
-            ),
-            Text(
-              '${videoClip.timeStamp.start.label()} | ${videoClip.clipLength.inMilliseconds}ms',
-            ),
-          ],
+                      );
+                    }),
+              ),
+              Text(
+                '${videoClip.timeStamp.start.label()} | ${videoClip.clipLength.inMilliseconds}ms',
+              ),
+            ],
+          ),
         ),
       ),
     );

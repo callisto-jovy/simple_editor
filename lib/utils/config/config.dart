@@ -4,13 +4,13 @@ import 'dart:io';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
-import 'package:video_editor/utils/model/audio_data.dart';
-import 'package:video_editor/utils/backend_util.dart';
-import 'package:video_editor/utils/config_util.dart';
+import 'package:video_editor/utils/audio/background_audio.dart';
+import 'package:video_editor/utils/backend/backend_util.dart';
+import 'package:video_editor/utils/config/config_util.dart';
 import 'package:video_editor/utils/model/project.dart';
 import 'package:video_editor/utils/model/project_config.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
-import 'package:video_editor/utils/preview_util.dart';
+import 'package:video_editor/utils/backend/preview_util.dart';
 
 /// The applications [Uuid]
 const Uuid kUuid = Uuid();
@@ -54,7 +54,7 @@ void fromJson(final Map<String, dynamic> json) {
 
 Future<void> setAudioPath(final String path) async {
   config.audioPath = path;
-  return loadAudioData();
+  return loadBackgroundAudio();
 }
 
 void removeClip(final VideoClip videoClip) {
@@ -89,6 +89,11 @@ Future<void> handlePreview(final String previewPath) async {
 
   config.previewPath = previewPath;
 }
+
+
+
+
+
 
 /// Creates a JSON [String] with all the app's state to pass to the backend.
 Future<String> toEditorConfig() async {
@@ -163,5 +168,5 @@ Future<void> importFile({String? path}) async {
   dynamic json = jsonDecode(file.readAsStringSync());
 
   fromJson(json);
-  await loadAudioData();
+  await loadBackgroundAudio();
 }

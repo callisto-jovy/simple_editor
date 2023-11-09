@@ -1,22 +1,23 @@
 import 'dart:async';
 import 'dart:isolate';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_waveforms/flutter_audio_waveforms.dart';
 import 'package:jni/jni.dart';
 import 'package:media_kit_video/media_kit_video_controls/src/controls/extensions/duration.dart';
-import 'package:video_editor/utils/model/audio_data.dart';
-import 'package:video_editor/utils/easy_edits_backend.dart';
+import 'package:video_editor/utils/backend/easy_edits_backend.dart';
 import 'package:video_editor/utils/extensions/build_context_extension.dart';
-import 'package:video_editor/utils/frame_export_util.dart';
 import 'package:video_editor/utils/model/audio_clip.dart';
+import 'package:video_editor/utils/audio/background_audio.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
 import 'package:video_editor/widgets/lane_container.dart';
+import 'package:video_editor/widgets/time_stamp_painer.dart';
 import 'package:video_editor/widgets/timeline.dart';
 import 'package:video_editor/widgets/video_clip_container.dart';
 
-import '../utils/config.dart';
+import '../utils/config/config.dart';
 
 const double milliPixelMultiplier = 0.3; // Ten milliseconds are equal to one pixel.
 
@@ -53,6 +54,22 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
     );
   }
 
+  Widget _proxyDecorator(Widget child, int index, Animation<double> animation) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (BuildContext context, Widget? child) {
+        final double animValue = Curves.easeInOut.transform(animation.value);
+        final double elevation = lerpDouble(0, 6, animValue)!;
+        return Material(
+          elevation: elevation,
+          shadowColor: Colors.black,
+          child: child,
+        );
+      },
+      child: child,
+    );
+  }
+
   Widget _buildVideoLane() {
     return StreamBuilder(
       stream: widget.videoClipController.stream,
@@ -72,27 +89,25 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
               itemCount: clips.length,
               padding: const EdgeInsets.all(5),
               scrollDirection: Axis.horizontal,
+              proxyDecorator: _proxyDecorator,
               itemBuilder: (context, index) {
                 final VideoClip videoClip = clips[index];
                 // Map the millisecond range to the screen size
                 final double height = laneHeight * 2;
                 final double width = videoClip.clipLength.inMilliseconds * milliPixelMultiplier;
 
-                return Padding(
-                  key: Key('$index'),
-                  padding: const EdgeInsets.all(8.0),
-                  child: VideoClipContainer(
-                    index: index,
-                    videoClip: videoClip,
-                    width: width,
-                    height: height,
-                    thumbnailGenerator: _thumbnailGenerator,
-                  ),
+                return VideoClipContainer(
+                  key: Key('${videoClip.timeStamp}$index'),
+                  index: index,
+                  videoClip: videoClip,
+                  width: width,
+                  height: height,
+                  thumbnailGenerator: _thumbnailGenerator,
                 );
               },
               onReorder: (int oldIndex, int newIndex) {
                 if (oldIndex < newIndex) {
-                  newIndex -= 1;
+                  newIndex--;
                 }
                 setState(() {
                   final VideoClip item = clips.removeAt(oldIndex);
@@ -103,12 +118,13 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
                   // update all the clips.
                   for (int i = 0; i < config.timeBetweenBeats().length; i++) {
                     if (i < config.videoClips.length) {
-                      clips[i].clipLength = Duration(milliseconds: config.timeBetweenBeats()[i].round());
+                      clips[i].clipLength =
+                          Duration(milliseconds: config.timeBetweenBeats()[i].round());
                     }
                   }
 
                   // Inform the parent that the clips have been reordered, so the backend can be updates accordingly.
-                  //  widget.onReorder.call(clips);
+                  widget.onReorder.call(clips);
                 });
               },
             ),
@@ -186,9 +202,13 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
 class TimeLineEditor extends StatefulWidget {
   final StreamController<List<VideoClip>> videoClipController;
   final StreamController<List<AudioClip>> audioClipController;
+  final Function(List<VideoClip>) onReorder;
 
-   const TimeLineEditor(
-      {super.key, required this.videoClipController, required this.audioClipController});
+  const TimeLineEditor(
+      {super.key,
+      required this.videoClipController,
+      required this.audioClipController,
+      required this.onReorder});
 
   @override
   State<TimeLineEditor> createState() => _TimeLineEditorState();
