@@ -6,11 +6,11 @@ import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 import 'package:video_editor/utils/audio/background_audio.dart';
 import 'package:video_editor/utils/backend/backend_util.dart';
+import 'package:video_editor/utils/backend/preview_util.dart';
 import 'package:video_editor/utils/config/config_util.dart';
 import 'package:video_editor/utils/model/project.dart';
 import 'package:video_editor/utils/model/project_config.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
-import 'package:video_editor/utils/backend/preview_util.dart';
 
 /// The applications [Uuid]
 const Uuid kUuid = Uuid();
@@ -45,6 +45,8 @@ void fromJson(final Map<String, dynamic> json) {
   } else if (json['version'] == '1.1.1') {
     json['config']['preview_path'] = '';
     json['config']['clip_previews'] = {};
+  } else if (json['version'] == '1.1.2') {
+    json['config']['audio_data'] = {'path': ''};
   }
   // NOTE:: Whenever the config is changed in major ways or needs to be handled differently due to breaking changes,
   // we can have a different method to read previous configs. At least after version 1.0.0 when saving the config again, the old config is overwritten.
@@ -88,17 +90,6 @@ Future<void> handlePreview(final String previewPath) async {
   }
 
   config.previewPath = previewPath;
-}
-
-
-
-
-
-
-/// Creates a JSON [String] with all the app's state to pass to the backend.
-Future<String> toEditorConfig() async {
-  final json = editorConfig();
-  return kEncoder.convert(json);
 }
 
 String previewSegmentJson(final VideoClip videoClip) {

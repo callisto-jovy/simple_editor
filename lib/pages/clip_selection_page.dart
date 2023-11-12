@@ -40,6 +40,8 @@ class _VideoPlayerState extends State<VideoPlayer> {
   final List<TimeStamp> timeStamps = [];
   Duration? introStart, introEnd;
 
+
+
   Future<void> _loadTimeStamps() async {
     for (final TimeStamp stamp in config.videoProject.config.timeStamps) {
       if (stamp.startFrame == null) {
@@ -73,7 +75,6 @@ class _VideoPlayerState extends State<VideoPlayer> {
     _scrollController.dispose();
     _timeLineScroll.dispose();
     super.dispose();
-
   }
 
   Widget _buildVideo(BuildContext context) {

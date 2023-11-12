@@ -105,7 +105,7 @@ class ProjectConfig {
     json['video_clips'].forEach((v) => videoClips.add(VideoClip.fromJson(v)));
 
     // Async loading of the audio data.
-    AudioData.fromJson(json['audio_data']).then((value) => audioData = value);
+    audioData = AudioData.fromJson(json['audio_data']);
   }
 
   Map<String, dynamic> toJson() => {
@@ -121,7 +121,7 @@ class ProjectConfig {
         'video_clips': videoClips,
         'editing_flags': editingOptions,
         'clip_previews': generatedPreviews,
-        'filters': filters.toList(),
-        'audio_data': audioData
+        'filters': filters,
+        'audio_data': audioData,
       };
 }

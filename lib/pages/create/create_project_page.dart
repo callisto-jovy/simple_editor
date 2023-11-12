@@ -65,6 +65,8 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
     final String? path = await _importFile();
 
     if (path != null) {
+      _videoPathController.text = path;
+
       setState(() {
         _isAudioVisible = true; // Make the audio visible
       });

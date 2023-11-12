@@ -1,14 +1,16 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flexible_slider/flexible_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_waveforms/flutter_audio_waveforms.dart';
 import 'package:jni/jni.dart';
 import 'package:path/path.dart' as path;
 import 'package:video_editor/utils/audio/audio_data_util.dart';
-import 'package:video_editor/utils/config/config.dart' as config;
 import 'package:video_editor/utils/backend/easy_edits_backend.dart';
+import 'package:video_editor/utils/beat_time_exporter.dart';
+import 'package:video_editor/utils/config/config.dart' as config;
 import 'package:video_editor/widgets/audio/audio_player_controls.dart';
 import 'package:video_editor/widgets/styles.dart';
 import 'package:video_editor/widgets/time_stamp_painer.dart';
@@ -91,7 +93,6 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
         config.config.beatStamps.add(element.doubleValue(releaseOriginal: true));
       }
     });
-
   }
 
   void _addTimeStampForRemoval(final List<double> timeStamp) {
@@ -121,6 +122,12 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
     config.updateClipTimes();
   }
 
+  void _exportBeatTimes() {
+    final Future<String?> result =
+        FilePicker.platform.saveFile(dialogTitle: "Save file", allowedExtensions: ['csv']);
+    result.then((value) => exportAsCSV(value));
+  }
+
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
@@ -128,6 +135,12 @@ class _AudioAnalysisState extends State<AudioAnalysis> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(path.basename(config.config.audioPath)),
+        actions: [
+          TextButton(
+            onPressed: _exportBeatTimes,
+            child: const Text('Export as CSV'),
+          )
+        ],
       ),
       body: Column(
         children: [

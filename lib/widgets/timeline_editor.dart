@@ -36,6 +36,11 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
     _timeLineScroll.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+  }
+
   double width(final double milliseconds) => milliseconds * milliPixelMultiplier;
 
   /// Red [Container] to signify the audio.
@@ -49,6 +54,8 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
           samples: samples,
           height: laneHeight,
           width: laneWidth,
+          absolute: true,
+
         ),
       ),
     );
@@ -166,7 +173,7 @@ class _TimeLineEditorState extends State<TimeLineEditor> {
         scrollDirection: Axis.horizontal,
         controller: _timeLineScroll,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildVideoLane(),

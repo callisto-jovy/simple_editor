@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_audio_waveforms/flutter_audio_waveforms.dart';
 import 'package:video_editor/utils/extensions/build_context_extension.dart';
 import 'package:video_editor/utils/model/abstract_clip.dart';
-import 'package:video_editor/utils/model/audio_clip.dart';
+import 'package:video_editor/widgets/time_line_painter.dart';
 
 class TimeLine<T extends AbstractClip> extends StatefulWidget {
   /// [List] of type [T] holds the clips.
@@ -128,19 +127,13 @@ class _TimeLineState<T extends AbstractClip> extends State<TimeLine<T>> {
       onPointerMove: _handleDragging,
       onPointerUp: _handleDragStop,
       behavior: HitTestBehavior.translucent,
-      child: Container(
-        color: context.theme.hoverColor,
-        child: Row(
-          children: widget.clips.map((e) {
-            return Transform.translate(
-              offset: e.positionOffset,
-              child: PolygonWaveform(
-                samples: (e as AudioClip).samples,
-                width: e.width,
-                height: e.height(context.mediaSize),
-              ),
-            );
-          }).toList(),
+      child: CustomPaint(
+        isComplex: true,
+        key: _videoTimeLineKey,
+        painter: TimeLinePainter<T>(
+            clips: widget.clips, textFunction: (p0) => '', draggingClip: draggingClip),
+        child: Container(
+          color: context.theme.hoverColor,
         ),
       ),
     );

@@ -8,14 +8,14 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:video_editor/pages/audio_analysis_page.dart';
 import 'package:video_editor/pages/clip_selection_page.dart';
 import 'package:video_editor/pages/settings_page.dart';
+import 'package:video_editor/utils/backend/backend_util.dart';
+import 'package:video_editor/utils/backend/frame_export_util.dart';
+import 'package:video_editor/utils/backend/preview_util.dart' as preview;
 import 'package:video_editor/utils/cache_image_provider.dart';
 import 'package:video_editor/utils/config/config.dart' as config;
-import 'package:video_editor/utils/backend/edit_util.dart';
-import 'package:video_editor/utils/backend/frame_export_util.dart';
 import 'package:video_editor/utils/model/audio_clip.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
-import 'package:video_editor/utils/backend/preview_util.dart' as preview;
 import 'package:video_editor/widgets/snackbars.dart';
 import 'package:video_editor/widgets/styles.dart';
 import 'package:video_editor/widgets/time_stamp_widget.dart';
@@ -93,7 +93,6 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     startFrameExport();
   }
 
-
   @override
   void onWindowClose() {
     windowManager.isPreventClose().then((value) {
@@ -139,6 +138,47 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
           MaterialPageRoute(builder: (context) => const MainProjectPage(), maintainState: true),
           (Route<dynamic> route) => false);
     });
+  }
+
+  void _exportSegment() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        double segmentLength = 0;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              actions: [
+                TextButton(
+                  onPressed: () => exportSegments(segmentLength),
+                  style: textButtonStyle(context),
+                  child: const Text('Export'),
+                )
+              ],
+              title: const Text('Export clips'),
+              content: Column(
+                children: [
+                  const Text('The duration one segment is equal to in seconds. 0 = the length between the beats'),
+                  Slider(
+                    value: segmentLength,
+                    max: 40,
+                    min: 0,
+                    label: segmentLength.round().toString(),
+                    divisions: 40,
+                    onChanged: (value) {
+                      setState(() {
+                        segmentLength = value;
+                      });
+                    },
+                  ),
+
+                ],
+              ),
+            );
+          }
+        );
+      },
+    );
   }
 
   /// Pushes a new page
@@ -218,7 +258,8 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     // Constrain the position
     videoClip.positionOffset = videoClip.constrainPosition(renderBox, translatedOffset);
 
-    final AudioClip audioClip = AudioClip(timeStamp: timeStamp.start, clipLength: beatLength, positionOffset: translatedOffset);
+    final AudioClip audioClip = AudioClip(
+        timeStamp: timeStamp.start, clipLength: beatLength, positionOffset: translatedOffset);
     audioClip.positionOffset = audioClip.constrainPosition(renderBox, translatedOffset);
 
     // Pass off to config to generate
@@ -247,7 +288,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
         child: const Text('Edit'),
       ),
       TextButton(
-        onPressed: () => exportSegments(),
+        onPressed: () => _exportSegment(),
         child: const Text('Export Segments'),
       ),
       TextButton(

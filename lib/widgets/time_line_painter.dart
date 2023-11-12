@@ -1,5 +1,6 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import 'package:video_editor/utils/config/config.dart';
 import 'package:video_editor/utils/model/abstract_clip.dart';
 import 'package:video_editor/utils/model/audio_clip.dart';
 
@@ -13,8 +14,7 @@ class TimeLinePainter<T extends AbstractClip> extends CustomPainter {
 
   @override
   void paint(final Canvas canvas, final Size size) {
-
-  /*  if (T is! AudioClip) {
+    /*  if (T is! AudioClip) {
       final paint = Paint()..color = Colors.redAccent;
       final paintSelected = Paint()..color = Colors.blue;
 
@@ -36,34 +36,54 @@ class TimeLinePainter<T extends AbstractClip> extends CustomPainter {
     }*/
 
     if (T == AudioClip) {
-
       for (final T clip in clips) {
         clip as AudioClip;
-
-        final paint = Paint()
+        final Paint paint = Paint()
           ..style = PaintingStyle.stroke
-          ..color = Colors.redAccent;
+          ..color = Colors.blueAccent;
 
-        final path = Path();
+        final Path path = Path();
 
-        for (var i = 0; i < clip.samples.length; i++) {
-          final x = (size.width / clip.samples.length) * i;
-          final y = clip.samples[i];
+        // The clip's x position
+        final double xPos = clip.positionOffset.dx - clip.width / 2;
+        // The clip's y position
+        final double yPos = clip.positionOffset.dy - clip.height(size) / 2;
 
-          if (i == clip.samples.length - 1) {
-            path.lineTo(x, 0);
-          } else {
-            path.lineTo(x, y);
+        final double height = clip.height(size);
+
+        // Process the samples
+        final List<double> processedSamples = clip.samples.map((e) => e * height).toList();
+
+        final maxNum = processedSamples.reduce((a, b) => max(a.abs(), b.abs()));
+
+        if (maxNum > 0) {
+          final double multiplier = pow(maxNum, -1).toDouble() * height / 2;
+
+          final List<double> samples = processedSamples.map((e) => e * multiplier).toList();
+
+          // move to
+          path.moveTo(xPos, yPos);
+
+          for (var i = 0; i < samples.length; ++i) {
+            final double x = xPos + ((clip.width / samples.length) * i);
+            final double y = yPos + samples[i];
+
+            if (i == samples.length - 1) {
+              path.lineTo(x, yPos);
+            } else {
+              path.lineTo(x, y);
+            }
           }
         }
 
         //Gets the [alignPosition] depending on [waveformAlignment]
-        final alignPosition = size.height / 2;
+        final double alignPosition = height / 2;
 
         //Shifts the path along y-axis by amount of [alignPosition]
-        final shiftedPath = path.shift(Offset(0, alignPosition));
+        final Path shiftedPath = path.shift(Offset(0, alignPosition));
 
         canvas.drawPath(shiftedPath, paint);
+        canvas.drawRect(clip.paintingBounds(size), paint);
       }
     }
   }
