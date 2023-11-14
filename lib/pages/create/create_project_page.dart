@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:video_editor/pages/main_project_page.dart';
 import 'package:video_editor/utils/audio/audio_data_util.dart';
 import 'package:video_editor/utils/config/config.dart' as config;
-import 'package:video_editor/utils/model/project.dart';
-import 'package:video_editor/utils/model/project_config.dart';
+import 'package:video_editor/utils/config/project.dart';
+import 'package:video_editor/utils/config/project_config.dart';
 import 'package:video_editor/widgets/snackbars.dart';
 import 'package:video_editor/widgets/styles.dart';
 

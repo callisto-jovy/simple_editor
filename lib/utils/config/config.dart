@@ -4,12 +4,13 @@ import 'dart:io';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
+import 'package:video_editor/utils/audio/audio_data_util.dart';
 import 'package:video_editor/utils/audio/background_audio.dart';
 import 'package:video_editor/utils/backend/backend_util.dart';
 import 'package:video_editor/utils/backend/preview_util.dart';
 import 'package:video_editor/utils/config/config_util.dart';
-import 'package:video_editor/utils/model/project.dart';
-import 'package:video_editor/utils/model/project_config.dart';
+import 'package:video_editor/utils/config/project.dart';
+import 'package:video_editor/utils/config/project_config.dart';
 import 'package:video_editor/utils/model/video_clip.dart';
 
 /// The applications [Uuid]
@@ -30,28 +31,6 @@ Future<void> ensureOutExists() async {
   if (!exists) {
     await videoProject.workingDirectory.create();
   }
-}
-
-void fromJson(final Map<String, dynamic> json) {
-  // Handle old app versions
-  if (json['version'] == null) {
-    videoProject = handleLegacyJson(json);
-    return;
-  } else if (json['version'] == '1.0.0') {
-    json['config']['beat_times'] =
-        []; // add empty beat time list. saving the beat times has only been introduced in 1.1.0
-  } else if (json['version'] == '1.1.0') {
-    json['config']['video_clips'] = [];
-  } else if (json['version'] == '1.1.1') {
-    json['config']['preview_path'] = '';
-    json['config']['clip_previews'] = {};
-  } else if (json['version'] == '1.1.2') {
-    json['config']['audio_data'] = {'path': ''};
-  }
-  // NOTE:: Whenever the config is changed in major ways or needs to be handled differently due to breaking changes,
-  // we can have a different method to read previous configs. At least after version 1.0.0 when saving the config again, the old config is overwritten.
-
-  videoProject = VideoProject.fromJson(json);
 }
 
 Future<void> setAudioPath(final String path) async {
@@ -152,12 +131,30 @@ Future<void> saveApplicationState() async {
   file.writeAsString(appState);
 }
 
-Future<void> importFile({String? path}) async {
-  if (path == null || path.isEmpty) return;
+Stream<(String, int)> _importProject(final File file) async* {
+  yield ('Importing project file', 50);
+
+  videoProject = fromJson(file);
+
+  yield ('Loading audio source.', 70);
+  await loadBackgroundAudio();
+
+  yield ('Extracting audio from source.', 80);
+  config.audioData = await readVideoFile(config.videoPath);
+
+  yield ('Done extracting', 100);
+}
+
+Future<Stream<(String, int)>> importProject({String? path}) async {
+  // Error handling, display error message: Could not import project
+  if (path == null || path.isEmpty) {
+    return Future.error('Could not import project. The project file does not exist.');
+  }
 
   final File file = File(path);
-  dynamic json = jsonDecode(file.readAsStringSync());
+  if (!file.existsSync()) {
+    return Future.error('Could not import project. The project file does not exist.');
+  }
 
-  fromJson(json);
-  await loadBackgroundAudio();
+  return _importProject(file);
 }

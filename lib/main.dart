@@ -2,10 +2,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:local_notifier/local_notifier.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:video_editor/pages/create/create_project_page.dart';
 import 'package:video_editor/pages/main_project_page.dart';
-import 'package:video_editor/utils/config/config.dart' as config;
 import 'package:video_editor/utils/backend/jni_util.dart';
+import 'package:video_editor/utils/config/config.dart' as config;
 import 'package:video_editor/widgets/styles.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -81,8 +82,20 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     if (result != null) {
-      config.importFile(path: result.files[0].path);
-      importDone.call();
+      // Show loading bar.
+      final ProgressDialog pd = ProgressDialog(context: context);
+      pd.show(msg: 'Loading project...');
+
+      try {
+        final stream = await config.importProject(path: result.files[0].path);
+
+        stream.listen((event) => pd.update(value: event.$2, msg: event.$1),
+            onDone: importDone.call());
+
+      } catch (error) {
+        pd.update(value: 0, msg: 'An error occurred. Closing the popup in 5seconds. $error');
+        pd.close(delay: 5);
+      }
     }
   }
 

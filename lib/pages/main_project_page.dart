@@ -145,38 +145,36 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
       context: context,
       builder: (context) {
         double segmentLength = 0;
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              actions: [
-                TextButton(
-                  onPressed: () => exportSegments(segmentLength),
-                  style: textButtonStyle(context),
-                  child: const Text('Export'),
-                )
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            actions: [
+              TextButton(
+                onPressed: () => exportSegments(segmentLength),
+                style: textButtonStyle(context),
+                child: const Text('Export'),
+              )
+            ],
+            title: const Text('Export clips'),
+            content: Column(
+              children: [
+                const Text(
+                    'The duration one segment is equal to in seconds. 0 = the length between the beats'),
+                Slider(
+                  value: segmentLength,
+                  max: 40,
+                  min: 0,
+                  label: segmentLength.round().toString(),
+                  divisions: 40,
+                  onChanged: (value) {
+                    setState(() {
+                      segmentLength = value;
+                    });
+                  },
+                ),
               ],
-              title: const Text('Export clips'),
-              content: Column(
-                children: [
-                  const Text('The duration one segment is equal to in seconds. 0 = the length between the beats'),
-                  Slider(
-                    value: segmentLength,
-                    max: 40,
-                    min: 0,
-                    label: segmentLength.round().toString(),
-                    divisions: 40,
-                    onChanged: (value) {
-                      setState(() {
-                        segmentLength = value;
-                      });
-                    },
-                  ),
-
-                ],
-              ),
-            );
-          }
-        );
+            ),
+          );
+        });
       },
     );
   }
@@ -226,8 +224,9 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     );
 
     if (result != null) {
-      await config.importFile(path: result.files[0].path);
-      callback.call();
+      config.importProject(path: result.files[0].path)
+          .then((value) => callback.call())
+          .onError((error, stackTrace) => ScaffoldMessenger.of(context).showSnackBar(errorSnackbar('An error occurred while importing the project: $error')));
     }
   }
 

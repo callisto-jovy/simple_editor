@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:video_editor/utils/audio/audio_data_util.dart';
 import 'package:video_editor/utils/config/config.dart';
 import 'package:wav/wav_file.dart';
@@ -11,7 +13,7 @@ double audioLength = 10000;
 /// Starts to load the audio from the config video path.
 /// Calculates the length in milliseconds, chops the samples & adds them to the [List]
 Future<void> loadBackgroundAudio() async {
-  if (videoProject.config.audioPath.isEmpty) {
+  if (videoProject.config.audioPath.isEmpty || !File(videoProject.config.audioPath).existsSync()) {
     return;
   }
 

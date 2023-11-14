@@ -57,6 +57,7 @@ dependencies:
   uuid: ^3.0.7 # uuid for unique ids
   window_manager: ^0.3.7 #
   ffmpeg_cli: ^0.2.0
+  sn_progress_dialog: ^1.1.3
 
 
 dev_dependencies:

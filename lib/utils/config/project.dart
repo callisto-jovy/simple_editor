@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
-import 'package:video_editor/utils/model/project_config.dart';
+import 'package:video_editor/utils/config/project_config.dart';
 
 class VideoProject {
   /// The applications output [Directory]. The segments are exported into that [Directory] (& optionally edited together)

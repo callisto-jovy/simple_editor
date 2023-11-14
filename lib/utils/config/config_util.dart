@@ -1,10 +1,35 @@
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:video_editor/utils/model/project.dart';
-import 'package:video_editor/utils/model/project_config.dart';
+import 'package:path/path.dart';
+import 'package:video_editor/utils/config/project.dart';
+import 'package:video_editor/utils/config/project_config.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 
-VideoProject handleLegacyJson(final Map<String, dynamic> json) {
+VideoProject fromJson(final File file) {
+  dynamic json = jsonDecode(file.readAsStringSync());
+
+  // Handle old app versions
+  if (json['version'] == null) {
+    return handleLegacyJson(json, file.path);
+  } else if (json['version'] == '1.0.0') {
+    json['config']['beat_times'] =
+        []; // add empty beat time list. saving the beat times has only been introduced in 1.1.0
+  } else if (json['version'] == '1.1.0') {
+    json['config']['video_clips'] = [];
+  } else if (json['version'] == '1.1.1') {
+    json['config']['preview_path'] = '';
+    json['config']['clip_previews'] = {};
+  } else if (json['version'] == '1.1.2') {
+    json['config']['audio_data'] = {'path': ''};
+  }
+  // NOTE:: Whenever the config is changed in major ways or needs to be handled differently due to breaking changes,
+  // we can have a different method to read previous configs. At least after version 1.0.0 when saving the config again, the old config is overwritten.
+
+  return VideoProject.fromJson(json);
+}
+
+VideoProject handleLegacyJson(final Map<String, dynamic> json, final String importPath) {
   final ProjectConfig config = ProjectConfig();
 
   config.peakThreshold = json['peak_threshold'];
@@ -31,5 +56,7 @@ VideoProject handleLegacyJson(final Map<String, dynamic> json) {
     }
   }
 
-  return VideoProject('', projectName: 'Unnamed project', config: config);
+  final String importDir = dirname(importPath);
+
+  return VideoProject(importDir, projectName: 'Unnamed project', config: config);
 }
