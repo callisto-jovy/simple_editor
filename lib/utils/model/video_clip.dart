@@ -1,4 +1,4 @@
-import 'package:video_editor/utils/config.dart';
+import 'package:video_editor/utils/config/config.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 
 class VideoClip {
@@ -30,4 +30,8 @@ class VideoClip {
         'mute_audio': audioMuted,
         'time_stamp': timeStamp.toJson(),
       };
+
+  Duration get start => timeStamp.start;
+
+  Duration get end => timeStamp.start + clipLength;
 }

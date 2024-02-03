@@ -1,6 +1,7 @@
 import 'package:path/path.dart' as path;
-import 'package:video_editor/utils/config.dart' as config;
-import 'package:video_editor/utils/easy_edits_backend.dart' as backend;
+import 'package:video_editor/utils/audio/background_audio.dart';
+import 'package:video_editor/utils/config/config.dart' as config;
+import 'package:video_editor/utils/backend/easy_edits_backend.dart' as backend;
 import 'package:video_editor/utils/model/filter_wrapper.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 import 'package:wav/wav_file.dart';
@@ -51,13 +52,8 @@ class ProjectConfig {
       .toList();
 
   /// Converts the [List] of timestamps into a [List] of the time between the stamps.
-  Future<List<double>> timeBetweenBeats() async {
+  List<double> timeBetweenBeats() {
     final List<double> timeBetweenBeats = [];
-
-    final Wav wav = await Wav.readFile(config.videoProject.config.audioPath);
-
-    /// Total length / spp = length in seconds
-    final double lengthInMillis = ((wav.toMono().length / wav.samplesPerSecond) * 1000);
 
     // Calculate the difference between the timestamps.
     // this is the time one beat lasts.
@@ -70,7 +66,7 @@ class ProjectConfig {
       lastBeat = timeStamp;
     }
 
-    timeBetweenBeats.add(lengthInMillis - lastBeat);
+    timeBetweenBeats.add(audioLength - lastBeat);
 
     return timeBetweenBeats;
   }
@@ -117,7 +113,7 @@ class ProjectConfig {
   /// Converts the project's state into a json format which the Java-backend can understand.
   /// This [Map] stores the most important information in order to configure the editor.
   Future<Map<String, dynamic>> editorConfig() async {
-    final List<double> beatTimes = await timeBetweenBeats();
+    final List<double> beatTimes = timeBetweenBeats();
 
     return {
       'source_video': videoPath,

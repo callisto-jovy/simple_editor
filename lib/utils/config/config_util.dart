@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:video_editor/utils/model/project.dart';
-import 'package:video_editor/utils/model/project_config.dart';
+import 'package:video_editor/utils/config/project.dart';
+import 'package:video_editor/utils/config/project_config.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
 
 VideoProject handleLegacyJson(final Map<String, dynamic> json) {

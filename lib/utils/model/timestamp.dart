@@ -20,6 +20,7 @@ class TimeStamp {
       };
 }
 
+
 Future<TimeStamp> createTimeStamp(final Duration time, final Uint8List? frame) async {
   if (frame == null) {
     return TimeStamp(time, null);

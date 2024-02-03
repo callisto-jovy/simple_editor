@@ -4,9 +4,10 @@ import 'dart:io';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
-import 'package:video_editor/utils/config_util.dart';
-import 'package:video_editor/utils/model/project.dart';
-import 'package:video_editor/utils/model/project_config.dart';
+import 'package:video_editor/utils/audio/background_audio.dart';
+import 'package:video_editor/utils/config/config_util.dart';
+import 'package:video_editor/utils/config/project.dart';
+import 'package:video_editor/utils/config/project_config.dart';
 
 /// The applications [Uuid]
 const Uuid kUuid = Uuid();
@@ -20,12 +21,18 @@ late VideoProject videoProject;
 /// Getter to the underlying project config, in order to reduce call length
 ProjectConfig get config => videoProject.config;
 
-/// Makes sure that the [Directory] exists
+/// Makes sure that the working [Directory] exists
 Future<void> ensureOutExists() async {
   final bool exists = await videoProject.workingDirectory.exists();
   if (!exists) {
     await videoProject.workingDirectory.create();
   }
+}
+
+/// Helper setter method in order to make sure
+Future<void> setAudioPath(final String path) async {
+  config.audioPath = path;
+  return loadBackgroundAudio();
 }
 
 void fromJson(final Map<String, dynamic> json) {
@@ -34,8 +41,7 @@ void fromJson(final Map<String, dynamic> json) {
     videoProject = handleLegacyJson(json);
     return;
   } else if (json['version'] == '1.0.0') {
-    json['config']['beat_times'] =
-        []; // add empty beat time list. saving the beat times has only been introduced in 1.1.0
+    json['config']['beat_times'] = []; // add empty beat time list. saving the beat times has only been introduced in 1.1.0
   } else if (json['version'] == '1.1.0') {
     json['config']['video_clips'] = [];
   } else if (json['version'] == '1.1.1') {
@@ -77,11 +83,12 @@ Future<void> saveApplicationState() async {
   file.writeAsString(appState);
 }
 
-void importFile({String? path}) {
+Future<void> importFile({String? path}) async {
   if (path == null || path.isEmpty) return;
 
   final File file = File(path);
   dynamic json = jsonDecode(file.readAsStringSync());
 
   fromJson(json);
+  await loadBackgroundAudio();
 }

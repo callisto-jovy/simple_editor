@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
-import 'package:video_editor/utils/model/project_config.dart';
+import 'package:video_editor/utils/config/project_config.dart';
 
 class VideoProject {
   /// The applications output [Directory]. The segments are exported into that [Directory] (& optionally edited together)
@@ -22,6 +22,7 @@ class VideoProject {
     workingDirectory = Directory(path.join(_projectPath, 'editor_out'));
   }
 
+  /// Reconstructs the object from a given [Map]
   VideoProject.fromJson(final Map<String, dynamic> json)
       : projectName = json['project_name'],
         _projectPath = json['project_path'],
@@ -29,6 +30,7 @@ class VideoProject {
     workingDirectory = Directory(path.join(_projectPath, 'editor_out'));
   }
 
+  /// Converts the project into a JSON [Map]
   Map<String, dynamic> toJson(final String version) => {
         'version': version,
         'project_name': projectName,
@@ -36,12 +38,12 @@ class VideoProject {
         'config': config.toJson(),
       };
 
+  /// Setter for the project path variable, as to make sure, that the output directory is created whenever the project path is set.
   set projectPath(String value) {
     _projectPath = value;
     workingDirectory = Directory(path.join(_projectPath, 'editor_out'));
   }
 
+  /// getter for the project path, as the string is marked private.
   String get projectPath => _projectPath;
-
-  /// TODO: pass through some getters for the project config, in order to eliminate long calls
 }

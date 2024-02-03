@@ -1,9 +1,9 @@
 output:
   c:
-    library_name: easy_edits
+    library_name: video_editor
     path: src/de/yugata/
   dart:
-    path: lib/utils/easy_edits_backend.dart
+    path: lib/utils/video_editor_backend.dart
     structure: single_file
 
 

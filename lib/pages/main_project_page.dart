@@ -1,15 +1,16 @@
-import 'dart:typed_data';
-
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:video_editor/pages/audio_analysis_page.dart';
-import 'package:video_editor/pages/settings_page.dart';
+import 'package:video_editor/pages/clip_adjust_page.dart';
 import 'package:video_editor/pages/clip_selection_page.dart';
-import 'package:video_editor/utils/cache_image_provider.dart';
-import 'package:video_editor/utils/config.dart' as config;
-import 'package:video_editor/utils/edit_util.dart';
+import 'package:video_editor/pages/settings_page.dart';
+import 'package:video_editor/utils/backend/backend_util.dart';
+import 'package:video_editor/utils/config/config.dart' as config;
 import 'package:video_editor/utils/extensions/build_context_extension.dart';
 import 'package:video_editor/utils/model/timestamp.dart';
+import 'package:video_editor/utils/model/video_clip.dart';
 import 'package:video_editor/widgets/snackbars.dart';
 import 'package:video_editor/widgets/styles.dart';
 import 'package:video_editor/widgets/time_stamp_widget.dart';
@@ -155,6 +156,103 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     }
   }
 
+  void _showCustomMenu(
+      final TimeStamp timeStamp, final BuildContext context, final PointerDownEvent event) {
+    final RenderBox? overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+
+    if (overlay == null || event.buttons != kSecondaryButton) {
+      return;
+    }
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        event.position.dx,
+        event.position.dy,
+        overlay.size.width - event.position.dx,
+        overlay.size.height - event.position.dy,
+      ),
+      items: [
+        PopupMenuItem(
+          child: const Text('See clip'),
+          onTap: () => _navigateToPage(
+            context,
+            ClipAdjust(
+              videoClip: VideoClip(timeStamp, clipLength: const Duration(seconds: 20)),
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          child: const Text('Remove clip'),
+          onTap: () {}, //TODO: remove clip callback
+        ),
+        PopupMenuItem(
+          child: const Text('Export'),
+          onTap: () => _exportSingleSegment(timeStamp),
+        )
+        //TODO: Clip length menu
+      ],
+    );
+  }
+
+  void _exportSingleSegment(final TimeStamp timeStamp) async {
+    final int index = config.config.timeStamps.indexOf(timeStamp);
+
+    final ProgressDialog dialog = ProgressDialog(context: context);
+    dialog.show(max: index, msg: 'Exporting segment');
+    await exportSegment(timeStamp, 20);
+
+    dialog.update(value: index, msg: 'Exporting segment ${index + 1}');
+    dialog.close();
+  }
+
+  void _exportSegments(final double segmentLength) async {
+    final ProgressDialog dialog = ProgressDialog(context: context);
+
+    dialog.show(max: config.config.timeStamps.length, msg: 'Exporting segments');
+    await exportSegments(segmentLength);
+    dialog.close();
+  }
+
+  void _showExportSegmentDialoge() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        double segmentLength = 0;
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            actions: [
+              TextButton(
+                onPressed: () => _exportSegments(segmentLength),
+                style: textButtonStyle(context),
+                child: const Text('Export'),
+              )
+            ],
+            title: const Text('Export clips'),
+            content: Column(
+              children: [
+                const Text(
+                    'The duration one segment is equal to in seconds. 0 = the length between the beats'),
+                Slider(
+                  value: segmentLength,
+                  max: 40,
+                  min: 0,
+                  label: segmentLength.round().toString(),
+                  divisions: 40,
+                  onChanged: (value) {
+                    setState(() {
+                      segmentLength = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+          );
+        });
+      },
+    );
+  }
+
   List<Widget> appBarTrailing(final BuildContext context) {
     return [
       TextButton(
@@ -164,10 +262,6 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
       TextButton(
         onPressed: () => _importProjectFile(context),
         child: const Text('Import'),
-      ),
-      TextButton(
-        onPressed: () => exportSegments(),
-        child: const Text('Export'),
       ),
       TextButton(
         onPressed: () => _saveProject(context),
@@ -258,17 +352,11 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
       itemBuilder: (context, index) {
         final TimeStamp timeStamp = config.videoProject.config.timeStamps[index];
 
-        return LongPressDraggable(
-          data: timeStamp,
-          feedback: Image(
-            fit: BoxFit.cover,
-            filterQuality: FilterQuality.low,
-            image: CacheImageProvider(
-              '${timeStamp.start}',
-              Uint8List.view(timeStamp.startFrame!.buffer),
-            ),
-          ),
-          child: TimeStampCard(timeStamp: timeStamp),
+        return Card(
+          elevation: 5,
+          child: Listener(
+              onPointerDown: (event) => _showCustomMenu(timeStamp, context, event),
+              child: TimeStampCard(timeStamp: timeStamp)),
         );
       },
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -281,7 +369,7 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
     return Expanded(
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(50.0),
           child: Column(
             children: [
               Text(
@@ -322,23 +410,10 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
 
   Widget _buildProjectColumn() {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          children: [
-            EditableText(
-              style: Theme.of(context).textTheme.headlineSmall!,
-              controller: _projectNameController,
-              focusNode: FocusNode(),
-              cursorColor: Colors.blueGrey,
-              backgroundCursorColor: Colors.white,
-              onChanged: (value) => config.videoProject.projectName = value,
-            ),
-            _buildProjectPathRow(),
-          ],
-        ),
-      ),
-    );
+        child: Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: _buildProjectPathRow(),
+    ));
   }
 
   @override
@@ -351,19 +426,30 @@ class _MainProjectPageState extends State<MainProjectPage> with WindowListener {
         actions: appBarTrailing(context),
       ),
       body: Center(
-        child: SizedBox(
-          width: 450,
-          height: context.mediaSize.height * 0.9,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildProjectColumn(),
-              _buildAudioColumn(context),
-              _buildVideoColumn(context),
-              _buildClipsColumn(context),
-            ],
-          ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: context.mediaSize.width / 3,
+              height: context.mediaSize.height * 0.9,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildProjectColumn(),
+                  _buildAudioColumn(context),
+                  _buildVideoColumn(context),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextButton(
+                      onPressed: () => _showExportSegmentDialoge(),
+                      style: textButtonStyle(context),
+                      child: const Text('Export'),
+                    ),
+                  )
+                ],
+              ),
+            ),
+            _buildClipsColumn(context)
+          ],
         ),
       ),
     );

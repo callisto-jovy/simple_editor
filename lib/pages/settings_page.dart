@@ -1,10 +1,8 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:video_editor/pages/filter_page.dart';
-import 'package:video_editor/utils/config.dart' as config;
+import 'package:video_editor/utils/config/config.dart' as config;
 import 'package:video_editor/utils/model/filter_wrapper.dart';
-import 'package:video_editor/widgets/styles.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
